@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% from 'components/navigation.html' import admin_sidebar with context %}
+{% from 'components/icons.html' import icon %}
+
+{% set is_create = mode == 'create' %}
+{% block title %}{{ 'Tambah Guru' if is_create else 'Edit Guru' }} — Sistem Presensi{% endblock %}
+{% block body_class %}admin-page{% endblock %}
+
+{% block body %}
+<div class="app-shell admin-shell">
+  {{ admin_sidebar('teachers') }}
+  <main class="main-content">
+    <div class="desktop-only-notice" role="note">Admin dirancang untuk layar desktop dengan lebar minimal 1024px.</div>
+    <header class="content-header">
+      <div><p class="eyebrow">{{ 'Akun baru' if is_create else 'Perbarui profil' }}</p><h1 class="display-title">{{ 'Tambah Guru.' if is_create else 'Edit Guru.' }}</h1><p class="muted-copy">{{ 'Password sementara dibuat otomatis dan tampil sekali setelah akun tersimpan.' if is_create else 'Perubahan profil dicatat pada audit log.' }}</p></div>
+      <a class="ghost-button" href="{{ url_for('admin.teacher_list') }}">{{ icon('arrow-left') }}Kembali</a>
+    </header>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}<div class="flash-stack" aria-live="polite">{% for category, message in messages %}<p class="flash flash-{{ category }}" role="alert">{{ message }}</p>{% endfor %}</div>{% endif %}
+    {% endwith %}
+    <section class="panel form-panel" aria-labelledby="teacher-form-title">
+      <h2 id="teacher-form-title" class="panel-title">Informasi Guru</h2>
+      <form method="post" action="{{ url_for('admin.teacher_create') if is_create else url_for('admin.teacher_edit', teacher_id=teacher.teacher_id) }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-grid">
+          <div class="field"><label for="username">Username akun</label><input id="username" name="username" value="{{ values.username }}" minlength="3" maxlength="100" autocomplete="username" {{ 'readonly' if not is_create else '' }} required><small class="muted-copy">Huruf, angka, titik, garis bawah, atau tanda hubung.</small></div>
+          <div class="field"><label for="full_name">Nama lengkap</label><input id="full_name" name="full_name" value="{{ values.full_name }}" maxlength="150" autocomplete="name" required></div>
+          <div class="field"><label for="employee_number">NIP/NUPTK <span class="muted-copy">(opsional)</span></label><input id="employee_number" name="employee_number" value="{{ values.employee_number }}" maxlength="50" autocomplete="off"></div>
+        </div>
+        <button class="primary-button button-wide" type="submit">{{ icon('check') }}{{ 'Simpan dan buat password sementara' if is_create else 'Simpan perubahan' }}</button>
+      </form>
+    </section>
+  </main>
+</div>
+{% endblock %}

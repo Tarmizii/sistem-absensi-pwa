@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% from 'components/navigation.html' import admin_sidebar with context %}
+{% from 'components/icons.html' import icon %}
+{% block title %}Geofence Sekolah — Sistem Presensi{% endblock %}
+{% block body_class %}admin-page{% endblock %}
+{% block body %}
+<div class="app-shell admin-shell">
+  {{ admin_sidebar('geofence') }}
+  <main class="main-content">
+    <div class="desktop-only-notice" role="note">Admin dirancang untuk layar desktop dengan lebar minimal 1024px.</div>
+    <header class="content-header">
+      <div><p class="eyebrow">Batas lokasi presensi</p><h1 class="display-title">Geofence sekolah.</h1>
+        <p class="muted-copy">Server menghitung jarak dari titik yang sekolah verifikasi.</p></div>
+    </header>
+    {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}
+      <div class="flash-stack" aria-live="polite">{% for category, message in messages %}<p class="flash flash-{{ category }}" role="alert">{{ message }}</p>{% endfor %}</div>
+    {% endif %}{% endwith %}
+    <section class="bento-grid">
+      <article class="panel panel-span-8">
+        <p class="eyebrow">Konfigurasi lokasi</p><h2 class="panel-title" style="margin-top:.7rem">Titik dan radius</h2>
+        <form method="post" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="field"><label for="name">Nama lokasi</label><input id="name" name="name" value="{{ values.name }}" maxlength="100" required></div>
+          <div class="field"><label for="latitude">Latitude</label><input id="latitude" name="latitude" type="number" step="any" min="-90" max="90" value="{{ values.latitude }}" inputmode="decimal"><small class="muted-copy">Rentang -90 sampai 90. Masukkan koordinat yang sudah diverifikasi sekolah.</small></div>
+          <div class="field"><label for="longitude">Longitude</label><input id="longitude" name="longitude" type="number" step="any" min="-180" max="180" value="{{ values.longitude }}" inputmode="decimal"><small class="muted-copy">Rentang -180 sampai 180.</small></div>
+          <div class="field"><label for="radius_meters">Radius geofence (meter)</label><input id="radius_meters" name="radius_meters" type="number" min="1" step="1" value="{{ values.radius_meters or '75' }}" required><small class="muted-copy">Nilai awal 75 meter sesuai PRD.</small></div>
+          <div class="field"><label for="max_accuracy_meters">Batas accuracy GPS (meter)</label><input id="max_accuracy_meters" name="max_accuracy_meters" type="number" min="0.01" step="0.01" value="{{ values.max_accuracy_meters }}" inputmode="decimal"><small class="muted-copy">Belum ada nilai kebijakan dari sekolah. Geofence aktif memerlukan nilai yang disepakati; jangan menebaknya.</small></div>
+          <label class="checkbox-field"><input type="checkbox" name="is_active" {{ 'checked' if values.is_active == 'on' else '' }}> Aktifkan geofence</label>
+          <button class="primary-button button-wide" type="submit">{{ icon('check') }}Simpan pengaturan</button>
+        </form>
+      </article>
+      <article class="panel panel-span-4">
+        <p class="eyebrow">Status konfigurasi</p><h2 class="panel-title" style="margin-top:.7rem">{{ 'Aktif' if config.is_active else 'Belum aktif' }}</h2>
+        <p class="muted-copy">{{ config.name }}</p>
+        {% if config.latitude is none or config.longitude is none %}<p class="flash flash-warning" role="status">Koordinat sekolah belum diisi. Presensi berbasis lokasi tidak dapat diloloskan.</p>
+        {% else %}<p class="muted-copy">Koordinat sudah tersimpan. Demi privasi, nilai tidak ditampilkan di ringkasan.</p>{% endif %}
+        {% if config.max_accuracy_meters is none %}<p class="flash flash-warning" role="status">Ambang accuracy belum ditetapkan; konfigurasi harus tetap nonaktif.</p>
+        {% else %}<p class="muted-copy">Batas accuracy: {{ config.max_accuracy_meters }} meter.</p>{% endif %}
+        <p class="muted-copy">Radius saat ini: {{ config.radius_meters }} meter.</p>
+        {% if config.updated_at %}<p class="muted-copy">Terakhir diubah: {{ config.updated_at.strftime('%d/%m/%Y %H:%M') }}</p>{% endif %}
+        <div class="field" style="margin-top:1.25rem">
+          <form id="geofence-location-form" method="get" action="{{ url_for('admin.geofence_settings') }}" novalidate>
+            <button class="ghost-button" id="geofence-location-check" type="submit" data-geofence-active="{{ 'true' if config.is_active else 'false' }}" aria-describedby="geofence-location-feedback">Periksa lokasi perangkat ini</button>
+          </form>
+          <p class="muted-copy" id="geofence-location-feedback" role="status" aria-live="polite">Tekan tombol untuk meminta lokasi perangkat dan memeriksa izin, akurasi, serta radius.</p>
+          <noscript><p class="muted-copy">Aktifkan JavaScript untuk memakai pemeriksaan lokasi.</p></noscript>
+        </div>
+      </article>
+    </section>
+  </main>
+</div>
+<script defer src="{{ url_for('static', filename='js/geofence-location.js') }}"></script>
+{% endblock %}

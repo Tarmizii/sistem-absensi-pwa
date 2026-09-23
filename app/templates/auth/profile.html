@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% from 'components/navigation.html' import admin_sidebar, teacher_sidebar, bottom_nav with context %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}Profil {{ role_label }} — Sistem Presensi{% endblock %}
+{% block body_class %}{{ role }}-page{% endblock %}
+
+{% block body %}
+  {% if role == 'student' %}
+    <div class="student-shell">
+      <main class="main-content">
+        <header class="content-header">
+          <div>
+            <p class="eyebrow">Profil akun</p>
+            <h1 class="display-title">Akun {{ username }}.</h1>
+            <p class="muted-copy">Informasi dasar akun Anda tersimpan di sini.</p>
+          </div>
+          <span class="profile-chip"><span class="avatar">{{ username[:1]|upper }}</span>Siswa</span>
+        </header>
+        {% include 'auth/profile_content.html' %}
+      </main>
+      {{ bottom_nav('student', 'profile') }}
+    </div>
+  {% elif role == 'teacher' %}
+    <div class="teacher-shell">
+      <div class="app-shell">
+        {{ teacher_sidebar('profile') }}
+        <main class="main-content">
+          <header class="content-header">
+            <div>
+              <p class="eyebrow">Profil akun</p>
+              <h1 class="display-title">Akun {{ username }}.</h1>
+              <p class="muted-copy">Informasi dasar Guru/Wali Kelas.</p>
+            </div>
+            <span class="profile-chip"><span class="avatar">{{ username[:1]|upper }}</span>Guru</span>
+          </header>
+          {% include 'auth/profile_content.html' %}
+        </main>
+      </div>
+      {{ bottom_nav('teacher', 'profile') }}
+    </div>
+  {% else %}
+    <div class="app-shell admin-shell">
+      {{ admin_sidebar('profile') }}
+      <main class="main-content">
+        <header class="content-header">
+          <div>
+            <p class="eyebrow">Profil akun</p>
+            <h1 class="display-title">Akun {{ username }}.</h1>
+            <p class="muted-copy">Informasi dasar Admin sekolah.</p>
+          </div>
+          <span class="profile-chip"><span class="avatar">{{ username[:1]|upper }}</span>Admin</span>
+        </header>
+        {% include 'auth/profile_content.html' %}
+      </main>
+    </div>
+  {% endif %}
+{% endblock %}

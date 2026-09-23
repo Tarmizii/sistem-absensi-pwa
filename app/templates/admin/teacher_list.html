@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% from 'components/navigation.html' import admin_sidebar with context %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}Data Guru — Sistem Presensi{% endblock %}
+{% block body_class %}admin-page{% endblock %}
+
+{% block body %}
+<div class="app-shell admin-shell">
+  {{ admin_sidebar('teachers') }}
+  <main class="main-content">
+    <div class="desktop-only-notice" role="note">Admin dirancang untuk layar desktop dengan lebar minimal 1024px.</div>
+    <header class="content-header">
+      <div>
+        <p class="eyebrow">Master akun</p>
+        <h1 class="display-title">Data Guru.</h1>
+        <p class="muted-copy">Kelola profil dan akses Guru/Wali Kelas dari satu daftar.</p>
+      </div>
+      <a class="primary-button" href="{{ url_for('admin.teacher_create') }}">{{ icon('plus') }}Tambah Guru</a>
+    </header>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}<div class="flash-stack" aria-live="polite">{% for category, message in messages %}<p class="flash flash-{{ category }}" role="alert">{{ message }}</p>{% endfor %}</div>{% endif %}
+    {% endwith %}
+    <section class="panel panel-span-12" aria-labelledby="teacher-list-title">
+      <div class="admin-toolbar">
+        <div><h2 id="teacher-list-title" class="panel-title">Daftar Guru</h2><p class="muted-copy">{{ teachers|length }} akun ditampilkan, maksimal 200 hasil.</p></div>
+        <form class="search-form" method="get" action="{{ url_for('admin.teacher_list') }}" novalidate>
+          <label class="sr-only" for="teacher-search">Cari Guru</label>
+          <input id="teacher-search" name="q" value="{{ search }}" placeholder="Cari nama, username, atau NIP/NUPTK" autocomplete="off">
+          <button class="ghost-button" type="submit">{{ icon('search') }}Cari</button>
+        </form>
+      </div>
+      {% if teachers %}
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th scope="col">Nama</th><th scope="col">Username</th><th scope="col">NIP/NUPTK</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Aksi</span></th></tr></thead>
+            <tbody>
+            {% for teacher in teachers %}
+              <tr>
+                <th scope="row"><a class="table-primary-link" href="{{ url_for('admin.teacher_detail', teacher_id=teacher.teacher_id) }}">{{ teacher.full_name }}</a></th>
+                <td>{{ teacher.username }}</td>
+                <td>{{ teacher.employee_number or '—' }}</td>
+                <td><span class="status-badge {{ 'status-success' if teacher.is_active else 'status-warning' }}">{{ 'Aktif' if teacher.is_active else 'Nonaktif' }}</span></td>
+                <td class="table-actions"><a class="ghost-button" href="{{ url_for('admin.teacher_detail', teacher_id=teacher.teacher_id) }}">Detail</a></td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state"><p class="panel-title">Belum ada Guru yang cocok.</p><p class="muted-copy">Tambah Guru baru atau ubah kata pencarian.</p></div>
+      {% endif %}
+    </section>
+  </main>
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+[
+  {
+    "username": "fixture-admin",
+    "role": "admin",
+    "is_active": true,
+    "must_change_password": false
+  },
+  {
+    "username": "fixture-teacher",
+    "role": "teacher",
+    "is_active": true,
+    "must_change_password": true
+  },
+  {
+    "username": "fixture-student",
+    "role": "student",
+    "is_active": true,
+    "must_change_password": true
+  }
+]

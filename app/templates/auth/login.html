@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}Masuk — Sistem Presensi{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{% block body %}
+  <main class="auth-card" aria-labelledby="login-title">
+    <span class="brand-mark">Presensi SMA 4</span>
+    <p class="eyebrow" style="margin-top: 2.4rem;">Selamat datang kembali</p>
+    <h1 id="login-title" class="display-title">Masuk ke ruang kerja Anda.</h1>
+    <p class="muted-copy">Gunakan akun sekolah untuk melanjutkan.</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-stack" aria-live="polite">
+          {% for category, message in messages %}
+            <p class="flash flash-{{ category }}" role="alert">{{ message }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    <form method="post" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required aria-describedby="username-help">
+        <small id="username-help" class="muted-copy">Username diberikan oleh Admin sekolah.</small>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="primary-button button-wide" type="submit">Masuk {{ icon('sparkle') }}</button>
+    </form>
+  </main>
+{% endblock %}

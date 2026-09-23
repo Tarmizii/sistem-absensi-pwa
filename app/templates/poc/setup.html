@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Setup Android T04</title></head>
+<body>
+<main>
+  <h1>Setup Android untuk T04</h1>
+  <p>Hubungkan Android dan laptop ke Wi-Fi yang sama. Server laptop harus tetap menyala.</p>
+  <ol>
+    <li><a href="/ca.crt" download>Unduh sertifikat SMA4-T04-CA.crt</a>. Hanya sertifikat publik yang dibagikan.</li>
+    <li>Di Setelan Android, cari <strong>Instal sertifikat</strong>, pilih <strong>Sertifikat CA</strong>, lalu pilih berkas tadi. Nama menu berbeda menurut merek HP.</li>
+    <li>Buka <a href="https://{{ ip }}:8443">halaman kamera T04 melalui HTTPS</a>. Pastikan tidak ada peringatan sertifikat.</li>
+    <li>Masukkan kode akses yang ditampilkan pada terminal laptop, lalu nyalakan kamera.</li>
+  </ol>
+  <p>Sertifikat ini membuat HP mempercayai CA uji laptop. Cocokkan sidik jarinya dengan keluaran setup pada laptop; jangan memasang berkas dari sumber lain. Setelah pengujian selesai, hapus <strong>SMA4 T04 Local Test CA</strong> dari sertifikat pengguna Android.</p>
+  <p style="overflow-wrap:anywhere">{{ fingerprint }}</p>
+  <p>Jika tidak tersambung: periksa Wi-Fi, firewall port 8084/8443, dan pastikan jaringan tidak memisahkan perangkat. Jangan melewati peringatan HTTPS; perbaiki pemasangan sertifikat terlebih dahulu.</p>
+  <p><a href="https://support.google.com/pixelphone/answer/2844832">Panduan sertifikat Android dari Google</a></p>
+</main>
+</body></html>

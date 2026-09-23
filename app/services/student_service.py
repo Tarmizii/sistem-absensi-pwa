@@ -1,0 +1,182 @@
+"""Admin-owned Student account and profile operations for T09."""
+
+from __future__ import annotations
+
+import re
+import secrets
+from typing import Any
+
+from pymysql import IntegrityError
+from werkzeug.security import generate_password_hash
+
+from app.database import get_db, transaction
+from app.services.audit_service import record_audit
+
+
+NISN_MAX_LENGTH = 20
+STUDENT_NAME_MAX_LENGTH = 150
+TEMPORARY_PASSWORD_BYTES = 18
+NISN_PATTERN = re.compile(r"^[0-9]{4,20}$")
+
+
+class StudentValidationError(ValueError):
+    """Input cannot be used for a Student account/profile."""
+
+
+class StudentConflictError(StudentValidationError):
+    """NISN or username already exists."""
+
+
+class StudentNotFoundError(StudentValidationError):
+    """The requested Student does not exist or is not a Student account."""
+
+
+def validate_student_input(nisn: str, full_name: str) -> tuple[str, str]:
+    if not all(isinstance(value, str) for value in (nisn, full_name)):
+        raise StudentValidationError("Data Siswa harus berupa teks.")
+    if any(any(ord(char) < 32 for char in value) for value in (nisn, full_name)):
+        raise StudentValidationError("Data Siswa tidak boleh mengandung karakter kontrol.")
+    normalized_nisn = nisn.strip()
+    normalized_name = " ".join(full_name.split())
+    if not NISN_PATTERN.fullmatch(normalized_nisn):
+        raise StudentValidationError("NISN harus berupa 4–20 digit angka.")
+    if not 2 <= len(normalized_name) <= STUDENT_NAME_MAX_LENGTH:
+        raise StudentValidationError("Nama lengkap Siswa harus berisi 2–150 karakter.")
+    return normalized_nisn, normalized_name
+
+
+def _temporary_password() -> str:
+    return secrets.token_urlsafe(TEMPORARY_PASSWORD_BYTES)
+
+
+def _translate_integrity(error: IntegrityError) -> StudentConflictError:
+    text = str(error).lower()
+    if "nisn" in text or "uq_students_nisn" in text:
+        return StudentConflictError("NISN sudah digunakan.")
+    return StudentConflictError("Username sudah digunakan.")
+
+
+_SELECT = """SELECT s.id AS student_id, s.user_id, s.nisn, s.full_name,
+                      s.face_registered, u.username, u.is_active,
+                      u.must_change_password
+               FROM students AS s JOIN users AS u ON u.id = s.user_id"""
+
+
+def list_students(search: str = "") -> list[dict[str, Any]]:
+    term = " ".join(search.split())
+    like = f"%{term}%"
+    with get_db().cursor() as cursor:
+        cursor.execute(
+            f"""{_SELECT}
+               WHERE u.role = 'student' AND (%s = '' OR s.full_name LIKE %s
+                      OR s.nisn LIKE %s OR u.username LIKE %s)
+               ORDER BY s.full_name, s.id LIMIT 200""",
+            (term, like, like, like),
+        )
+        return list(cursor.fetchall())
+
+
+def get_student(student_id: int) -> dict[str, Any] | None:
+    with get_db().cursor() as cursor:
+        cursor.execute(f"""{_SELECT}
+               WHERE s.id = %s AND u.role = 'student' LIMIT 1""", (student_id,))
+        return cursor.fetchone()
+
+
+def create_student(*, actor_user_id: int, nisn: str, full_name: str) -> dict[str, Any]:
+    nisn, full_name = validate_student_input(nisn, full_name)
+    temporary_password = _temporary_password()
+    try:
+        with transaction() as (_, cursor):
+            cursor.execute("SELECT id FROM users WHERE username = %s LIMIT 1", (nisn,))
+            if cursor.fetchone() is not None:
+                raise StudentConflictError("NISN sudah digunakan.")
+            cursor.execute("SELECT id FROM students WHERE nisn = %s LIMIT 1", (nisn,))
+            if cursor.fetchone() is not None:
+                raise StudentConflictError("NISN sudah digunakan.")
+            cursor.execute(
+                """INSERT INTO users
+                   (username, password_hash, role, is_active, must_change_password)
+                   VALUES (%s, %s, 'student', 1, 1)""",
+                (nisn, generate_password_hash(temporary_password)),
+            )
+            user_id = int(cursor.lastrowid)
+            cursor.execute(
+                "INSERT INTO students (user_id, nisn, full_name, face_registered) VALUES (%s, %s, %s, 0)",
+                (user_id, nisn, full_name),
+            )
+            student_id = int(cursor.lastrowid)
+            record_audit(cursor, actor_user_id=actor_user_id, action="student_created",
+                         target_type="student", target_id=student_id,
+                         metadata={"must_change_password": True,
+                                   "face_registered": False,
+                                   "nisn_present": True})
+    except IntegrityError as error:
+        raise _translate_integrity(error) from None
+    return {"student_id": student_id, "user_id": user_id, "username": nisn,
+            "nisn": nisn, "full_name": full_name,
+            "face_registered": False, "temporary_password": temporary_password}
+
+
+def update_student(*, actor_user_id: int, student_id: int, nisn: str, full_name: str) -> dict[str, Any]:
+    nisn, full_name = validate_student_input(nisn, full_name)
+    try:
+        with transaction() as (_, cursor):
+            cursor.execute(
+                """SELECT s.id, s.user_id FROM students AS s
+                   JOIN users AS u ON u.id = s.user_id
+                   WHERE s.id = %s AND u.role = 'student' FOR UPDATE""", (student_id,))
+            student = cursor.fetchone()
+            if student is None:
+                raise StudentNotFoundError("Siswa tidak ditemukan.")
+            cursor.execute("SELECT id FROM students WHERE nisn = %s AND id <> %s LIMIT 1", (nisn, student_id))
+            if cursor.fetchone() is not None:
+                raise StudentConflictError("NISN sudah digunakan.")
+            cursor.execute("SELECT id FROM users WHERE username = %s AND id <> %s LIMIT 1", (nisn, student["user_id"]))
+            if cursor.fetchone() is not None:
+                raise StudentConflictError("Username sudah digunakan.")
+            cursor.execute("UPDATE students SET nisn = %s, full_name = %s WHERE id = %s",
+                           (nisn, full_name, student_id))
+            cursor.execute("UPDATE users SET username = %s WHERE id = %s AND role = 'student'",
+                           (nisn, student["user_id"]))
+            record_audit(cursor, actor_user_id=actor_user_id, action="student_updated",
+                         target_type="student", target_id=student_id,
+                         metadata={"fields": ["nisn", "full_name"]})
+    except IntegrityError as error:
+        raise _translate_integrity(error) from None
+    return get_student(student_id) or {"student_id": student_id, "nisn": nisn, "full_name": full_name}
+
+
+def deactivate_student(*, actor_user_id: int, student_id: int) -> None:
+    with transaction() as (_, cursor):
+        cursor.execute(
+            """SELECT s.user_id FROM students AS s JOIN users AS u ON u.id = s.user_id
+               WHERE s.id = %s AND u.role = 'student' FOR UPDATE""", (student_id,))
+        student = cursor.fetchone()
+        if student is None:
+            raise StudentNotFoundError("Siswa tidak ditemukan.")
+        cursor.execute("UPDATE users SET is_active = 0 WHERE id = %s AND is_active = 1", (student["user_id"],))
+        if cursor.rowcount != 1:
+            raise StudentValidationError("Akun Siswa sudah nonaktif.")
+        record_audit(cursor, actor_user_id=actor_user_id, action="student_deactivated",
+                     target_type="student", target_id=student_id,
+                     metadata={"is_active": False})
+
+
+def reset_student_password(*, actor_user_id: int, student_id: int) -> dict[str, str]:
+    temporary_password = _temporary_password()
+    with transaction() as (_, cursor):
+        cursor.execute(
+            """SELECT s.user_id, u.username FROM students AS s JOIN users AS u ON u.id = s.user_id
+               WHERE s.id = %s AND u.role = 'student' FOR UPDATE""", (student_id,))
+        student = cursor.fetchone()
+        if student is None:
+            raise StudentNotFoundError("Siswa tidak ditemukan.")
+        cursor.execute("UPDATE users SET password_hash = %s, must_change_password = 1 WHERE id = %s AND is_active = 1",
+                       (generate_password_hash(temporary_password), student["user_id"]))
+        if cursor.rowcount != 1:
+            raise StudentValidationError("Akun Siswa nonaktif dan tidak dapat direset.")
+        record_audit(cursor, actor_user_id=actor_user_id, action="student_password_reset",
+                     target_type="student", target_id=student_id,
+                     metadata={"must_change_password": True})
+    return {"username": student["username"], "temporary_password": temporary_password}

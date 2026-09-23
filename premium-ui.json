@@ -1,0 +1,7 @@
+{
+  "profile": "product-admin",
+  "ownership": {
+    "Select/Listbox": "native",
+    "Date": "native"
+  }
+}

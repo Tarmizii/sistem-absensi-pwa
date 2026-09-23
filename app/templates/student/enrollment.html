@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+{% block title %}Pendaftaran Wajah — Sistem Presensi{% endblock %}
+{% block body_class %}student-page{% endblock %}
+{% block body %}
+<main class="student-shell main-content" aria-labelledby="enrollment-title">
+  <header class="content-header">
+    <div><p class="eyebrow">Langkah sebelum presensi</p><h1 id="enrollment-title" class="display-title">Pendaftaran wajah.</h1>
+      <p class="muted-copy">{% if progress %}Halo, {{ progress.full_name }}. Siapkan tiga pose wajah berikut.{% else %}Siapkan diri untuk mendaftarkan tiga pose wajah.{% endif %}</p></div>
+    <form method="post" action="{{ url_for('auth.logout') }}" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="ghost-button" type="submit">{{ icon('logout') }}Keluar</button>
+    </form>
+  </header>
+  {% if database_unavailable %}<div class="flash flash-error" role="alert"><p>Progres belum dapat dimuat. Periksa koneksi lalu coba lagi.</p><a class="ghost-button" href="{{ url_for('student.enrollment') }}">Coba lagi</a></div>
+  {% elif progress %}
+    <section class="bento-grid" aria-label="Progres pendaftaran wajah">
+      <article class="panel panel-span-12 panel-purple">
+        <p class="eyebrow">Progres</p><h2 class="panel-value">{{ progress.saved_count }}<span aria-hidden="true">/</span>{{ progress.total_poses }}</h2>
+        <p class="muted-copy" style="color:#fff">pose valid tersimpan. Pendaftaran belum selesai sampai semua pose diproses dan model wajah berhasil diperbarui.</p>
+      </article>
+      <article class="panel panel-span-12">
+        <h2 class="panel-title">Tiga arah pengambilan</h2>
+        <ol class="profile-details" aria-label="Status pose wajah">
+          {% for pose in progress.poses %}<li style="list-style:none; display:flex; justify-content:space-between; gap:1rem; padding:.85rem 0; border-bottom:1px solid var(--color-border)">
+            <span><strong>{{ loop.index }}. {{ pose.label }}</strong><br><span class="muted-copy">{% if pose.key == 'front' %}Hadap lurus ke kamera{% elif pose.key == 'left' %}Putar wajah ke kiri{% else %}Putar wajah ke kanan{% endif %}</span></span>
+            <span class="status-badge {{ 'status-success' if pose.saved else 'status-warning' }}">{{ 'Tersimpan' if pose.saved else 'Belum diambil' }}</span>
+          </li>{% endfor %}
+        </ol>
+        <p class="muted-copy" style="margin-top:1rem">Pengambilan kamera, pemeriksaan kualitas, dan kedipan akan tersedia pada langkah enrollment berikutnya.</p>
+      </article>
+      <article class="panel panel-span-12 panel-lime"><p class="panel-title">Sebelum memulai</p><p class="muted-copy">Gunakan tempat terang, lepaskan penutup wajah, dan pastikan satu wajah terlihat jelas. Izinkan kamera saat browser memintanya.</p></article>
+    </section>
+  {% endif %}
+</main>
+{% endblock %}

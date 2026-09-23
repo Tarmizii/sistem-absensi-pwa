@@ -1,0 +1,73 @@
+{% from 'components/icons.html' import icon %}
+
+{% macro admin_sidebar(current='dashboard') -%}
+  <aside class="sidebar" aria-label="Navigasi Admin">
+    <a class="brand-mark" href="{{ url_for('role.admin_dashboard') }}">Presensi SMA 4</a>
+    <nav class="sidebar-nav" aria-label="Menu Admin">
+      <a class="nav-link" href="{{ url_for('role.admin_dashboard') }}" aria-current="{{ 'page' if current == 'dashboard' else 'false' }}">{{ icon('house') }}<span>Dashboard</span></a>
+      {% for label, icon_name in [('Data Siswa', 'users'), ('Data Guru', 'user'), ('Kelas', 'clipboard'), ('Jadwal', 'calendar'), ('Monitoring Presensi', 'chart'), ('Analitik', 'chart'), ('Pengaturan', 'gear')] %}
+        {% if label == 'Data Siswa' %}
+          <a class="nav-link" href="{{ url_for('admin.student_list') }}" aria-current="{{ 'page' if current == 'students' else 'false' }}">{{ icon(icon_name) }}<span>{{ label }}</span></a>
+        {% elif label == 'Data Guru' %}
+          <a class="nav-link" href="{{ url_for('admin.teacher_list') }}" aria-current="{{ 'page' if current == 'teachers' else 'false' }}">{{ icon(icon_name) }}<span>{{ label }}</span></a>
+        {% elif label == 'Kelas' %}
+          <a class="nav-link" href="{{ url_for('admin.class_list') }}" aria-current="{{ 'page' if current == 'classes' else 'false' }}">{{ icon(icon_name) }}<span>{{ label }}</span></a>
+        {% elif label == 'Jadwal' %}
+          <a class="nav-link" href="{{ url_for('admin.schedule_list') }}" aria-current="{{ 'page' if current == 'schedules' else 'false' }}">{{ icon(icon_name) }}<span>{{ label }}</span></a>
+          <a class="nav-link" href="{{ url_for('admin.schedule_exception_list') }}" aria-current="{{ 'page' if current == 'schedule_exceptions' else 'false' }}"><span aria-hidden="true">↳</span><span>Exception jadwal</span></a>
+        {% elif label == 'Pengaturan' %}
+          <a class="nav-link" href="{{ url_for('admin.geofence_settings') }}" aria-current="{{ 'page' if current == 'geofence' else 'false' }}">{{ icon(icon_name) }}<span>{{ label }}</span></a>
+        {% else %}
+          <span class="nav-link nav-link-disabled" aria-disabled="true" title="{{ label }} belum tersedia">{{ icon(icon_name) }}<span>{{ label }}</span></span>
+        {% endif %}
+      {% endfor %}
+    </nav>
+    <div class="sidebar-footer">
+      <p class="muted-copy" style="margin: 0; font-size: .76rem;">Ruang kerja Admin<br><strong>SMAN 4 Lhokseumawe</strong></p>
+      <a class="nav-link" href="{{ url_for('role.admin_profile') }}" aria-current="{{ 'page' if current == 'profile' else 'false' }}">{{ icon('user') }}<span>Profil akun</span></a>
+      <form method="post" action="{{ url_for('auth.logout') }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="ghost-button" style="width: 100%;" type="submit">{{ icon('logout') }}Keluar</button>
+      </form>
+    </div>
+  </aside>
+{%- endmacro %}
+
+{% macro teacher_sidebar(current='dashboard') -%}
+  <aside class="sidebar" aria-label="Navigasi Guru">
+    <a class="brand-mark" href="{{ url_for('role.teacher_dashboard') }}">Presensi SMA 4</a>
+    <nav class="sidebar-nav" aria-label="Menu Guru">
+      <a class="nav-link" href="{{ url_for('role.teacher_dashboard') }}" aria-current="{{ 'page' if current == 'dashboard' else 'false' }}">{{ icon('house') }}<span>Dashboard</span></a>
+      {% for label, icon_name in [('Presensi Kelas', 'clipboard'), ('Data Siswa', 'users'), ('Profil', 'user')] %}
+        {% if label == 'Profil' %}
+          <a class="nav-link" href="{{ url_for('role.teacher_profile') }}" aria-current="{{ 'page' if current == 'profile' else 'false' }}">{{ icon(icon_name) }}<span>{{ label }}</span></a>
+        {% else %}
+          <span class="nav-link nav-link-disabled" aria-disabled="true" title="{{ label }} belum tersedia">{{ icon(icon_name) }}<span>{{ label }}</span></span>
+        {% endif %}
+      {% endfor %}
+    </nav>
+    <div class="sidebar-footer">
+      <p class="muted-copy" style="margin: 0; font-size: .76rem;">Area Wali Kelas<br><strong>Kelola kelas dengan tenang.</strong></p>
+      <form method="post" action="{{ url_for('auth.logout') }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="ghost-button" style="width: 100%;" type="submit">{{ icon('logout') }}Keluar</button>
+      </form>
+    </div>
+  </aside>
+{%- endmacro %}
+
+{% macro bottom_nav(role, current='dashboard') -%}
+  {% if role == 'student' %}
+    <nav class="bottom-nav" aria-label="Navigasi Siswa">
+      <a class="nav-link" href="{{ url_for('role.student_dashboard') }}" aria-current="{{ 'page' if current == 'dashboard' else 'false' }}">{{ icon('house') }}<span>Beranda</span></a>
+      <span class="nav-link nav-link-disabled" aria-disabled="true" title="Riwayat belum tersedia">{{ icon('calendar') }}<span>Riwayat</span></span>
+      <a class="nav-link" href="{{ url_for('role.student_profile') }}" aria-current="{{ 'page' if current == 'profile' else 'false' }}">{{ icon('user') }}<span>Profil</span></a>
+    </nav>
+  {% elif role == 'teacher' %}
+    <nav class="bottom-nav teacher-bottom-nav" aria-label="Navigasi Guru">
+      <a class="nav-link" href="{{ url_for('role.teacher_dashboard') }}" aria-current="{{ 'page' if current == 'dashboard' else 'false' }}">{{ icon('house') }}<span>Dashboard</span></a>
+      <span class="nav-link nav-link-disabled" aria-disabled="true" title="Presensi belum tersedia">{{ icon('clipboard') }}<span>Presensi</span></span>
+      <span class="nav-link nav-link-disabled" aria-disabled="true" title="Data siswa belum tersedia">{{ icon('users') }}<span>Siswa</span></span>
+    </nav>
+  {% endif %}
+{%- endmacro %}

@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% from 'components/navigation.html' import admin_sidebar, teacher_sidebar, bottom_nav with context %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}{{ role_label }} — Sistem Presensi{% endblock %}
+{% block body_class %}{{ role }}-page{% endblock %}
+
+{% block body %}
+  {% if role == 'student' %}
+    <div class="student-shell">
+      <main class="main-content">
+        <header class="content-header">
+          <div>
+            <p class="eyebrow">Beranda siswa</p>
+            <h1 class="display-title">Halo, {{ username }}.</h1>
+            <p class="muted-copy">Satu langkah kecil untuk hadir tepat waktu.</p>
+          </div>
+          <a class="profile-chip" href="{{ url_for('role.student_profile') }}"><span class="avatar">{{ username[:1]|upper }}</span>Siswa</a>
+        </header>
+        <section class="bento-grid" aria-label="Ringkasan siswa">
+          <article class="panel panel-span-12 panel-purple">
+            <p class="eyebrow" style="color: var(--color-lime);">Presensi hari ini</p>
+            <h2 class="panel-title" style="margin-top: .7rem;">Belum ada presensi</h2>
+            <p style="margin: .6rem 0 0; color: rgb(255 255 255 / 78%); line-height: 1.55;">Fitur kamera dan lokasi akan muncul setelah modul presensi siap.</p>
+            <button class="primary-button" type="button" disabled aria-disabled="true" style="margin-top: 1.2rem; color: var(--color-ink); background: var(--color-lime);">{{ icon('sparkle') }}Presensi segera tersedia</button>
+          </article>
+          <article class="panel panel-span-8">
+            <p class="panel-title">Status bulan ini</p>
+            <p class="panel-value">—</p>
+            <p class="muted-copy" style="margin: .5rem 0 0;">Riwayat akan terisi setelah presensi pertama.</p>
+          </article>
+          <article class="panel panel-span-4 panel-lime">
+            <p class="panel-title">Akun</p>
+            <p class="muted-copy" style="color: var(--color-ink); margin: .55rem 0 0;">Profil dan perubahan password tersedia dari menu berikutnya.</p>
+            <span class="status-badge status-info" style="margin-top: 1rem;">Aktif</span>
+          </article>
+        </section>
+      </main>
+      {{ bottom_nav('student', 'dashboard') }}
+    </div>
+  {% elif role == 'teacher' %}
+    <div class="teacher-shell">
+      <div class="app-shell">
+        {{ teacher_sidebar('dashboard') }}
+        <main class="main-content">
+          <header class="content-header">
+            <div>
+              <p class="eyebrow">Ruang wali kelas</p>
+              <h1 class="display-title">Selamat datang, {{ username }}.</h1>
+              <p class="muted-copy">Pantau kelas dengan ringkas dan jelas.</p>
+            </div>
+            <a class="profile-chip" href="{{ url_for('role.teacher_profile') }}"><span class="avatar">{{ username[:1]|upper }}</span>Guru</a>
+          </header>
+          <section class="bento-grid" aria-label="Ringkasan Guru">
+            <article class="panel panel-span-8 panel-lime">
+              <p class="eyebrow" style="color: var(--color-ink);">Ringkasan kelas</p>
+              <h2 class="panel-title" style="margin-top: .7rem;">Data kelas belum tersedia</h2>
+              <p class="muted-copy" style="color: var(--color-ink); margin: .6rem 0 0;">Master kelas dan daftar siswa akan ditambahkan pada fase berikutnya.</p>
+            </article>
+            <article class="panel panel-span-4">
+              <p class="panel-title">Hari ini</p>
+              <p class="panel-value">—</p>
+              <span class="status-badge status-warning">Menunggu data</span>
+            </article>
+            <article class="panel panel-span-12">
+              <p class="panel-title">Aksi Guru</p>
+              <div class="status-row">
+                <span class="status-badge status-info">Presensi kelas belum tersedia</span>
+                <span class="status-badge status-info">Data siswa belum tersedia</span>
+              </div>
+            </article>
+          </section>
+        </main>
+      </div>
+      {{ bottom_nav('teacher', 'dashboard') }}
+    </div>
+  {% else %}
+    <div class="app-shell admin-shell">
+      {{ admin_sidebar('dashboard') }}
+      <main class="main-content">
+        <div class="desktop-only-notice" role="note">Admin dirancang untuk layar desktop dengan lebar minimal 1024px.</div>
+        <header class="content-header">
+          <div>
+            <p class="eyebrow">Pusat kendali sekolah</p>
+            <h1 class="display-title">Selamat datang, {{ username }}.</h1>
+            <p class="muted-copy">Bangun presensi sekolah dari satu ruang kerja.</p>
+          </div>
+          <a class="profile-chip" href="{{ url_for('role.admin_profile') }}"><span class="avatar">{{ username[:1]|upper }}</span>Admin</a>
+        </header>
+        <section class="bento-grid" aria-label="Ringkasan Admin">
+          <article class="panel panel-span-8 panel-purple">
+            <p class="eyebrow" style="color: var(--color-lime);">Status sistem</p>
+            <h2 class="panel-title" style="margin-top: .7rem;">Fondasi siap dikembangkan</h2>
+            <p style="margin: .6rem 0 0; color: rgb(255 255 255 / 78%); line-height: 1.55;">Akun, role guard, dan struktur navigasi sudah tersedia. Master data menjadi langkah berikutnya.</p>
+            <div class="status-row">
+              <span class="status-badge" style="color: var(--color-ink); background: var(--color-lime);">Autentikasi aktif</span>
+              <span class="status-badge" style="color: #fff; background: rgb(255 255 255 / 14%);">Mode pengembangan</span>
+            </div>
+          </article>
+          <article class="panel panel-span-4 panel-lime">
+            <p class="panel-title">Data sekolah</p>
+            <p class="panel-value">—</p>
+            <p class="muted-copy" style="color: var(--color-ink); margin: .5rem 0 0;">Belum ada siswa atau kelas yang dimuat.</p>
+          </article>
+          <article class="panel panel-span-12">
+            <p class="panel-title">Modul berikutnya</p>
+            <div class="status-row">
+              <span class="status-badge status-info">Master data</span>
+              <span class="status-badge status-info">Jadwal & geofence</span>
+              <span class="status-badge status-info">Enrollment wajah</span>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+  {% endif %}
+{% endblock %}

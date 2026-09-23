@@ -1,0 +1,156 @@
+"""Small, provisional OpenCV helpers for the T04 biometrics experiment.
+
+These helpers are deliberately separate from attendance and enrollment. They
+only establish deterministic preprocessing, a quality signal, Haar detection,
+and an LBPH API seam. They do not decide attendance or prove anti-spoofing.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Iterable
+
+import cv2
+import numpy as np
+
+
+FACE_SIZE = (200, 200)
+PROVISIONAL_BLUR_THRESHOLD = 80.0
+PROVISIONAL_BRIGHTNESS_MIN = 40.0
+PROVISIONAL_BRIGHTNESS_MAX = 220.0
+
+
+class FacePocError(ValueError):
+    """Raised when a POC frame cannot be processed safely."""
+
+
+@dataclass(frozen=True)
+class QualityReport:
+    """Measurable frame signals; thresholds remain provisional for T04."""
+
+    brightness: float
+    sharpness: float
+    acceptable: bool
+
+
+def _as_uint8_image(image: np.ndarray) -> np.ndarray:
+    if not isinstance(image, np.ndarray) or image.size == 0:
+        raise FacePocError("Frame kosong atau bukan array gambar.")
+    if image.dtype != np.uint8:
+        image = np.clip(image, 0, 255).astype(np.uint8)
+    return image
+
+
+def to_grayscale(image: np.ndarray) -> np.ndarray:
+    """Convert BGR or grayscale input to an 8-bit grayscale image."""
+
+    image = _as_uint8_image(image)
+    if image.ndim == 2:
+        return image
+    if image.ndim == 3 and image.shape[2] == 3:
+        return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    raise FacePocError("Format frame harus grayscale atau BGR tiga kanal.")
+
+
+def preprocess_face(image: np.ndarray) -> np.ndarray:
+    """Apply the same grayscale, contrast, and size steps to every sample."""
+
+    gray = to_grayscale(image)
+    equalized = cv2.equalizeHist(gray)
+    return cv2.resize(equalized, FACE_SIZE, interpolation=cv2.INTER_AREA)
+
+
+def assess_image_quality(image: np.ndarray) -> QualityReport:
+    """Return provisional brightness/sharpness signals for experiment logs."""
+
+    gray = to_grayscale(image)
+    brightness = float(np.mean(gray))
+    sharpness = float(cv2.Laplacian(gray, cv2.CV_64F).var())
+    acceptable = (
+        PROVISIONAL_BRIGHTNESS_MIN <= brightness <= PROVISIONAL_BRIGHTNESS_MAX
+        and sharpness >= PROVISIONAL_BLUR_THRESHOLD
+    )
+    return QualityReport(brightness, sharpness, acceptable)
+
+
+def _cascade(filename: str) -> cv2.CascadeClassifier:
+    path = Path(cv2.data.haarcascades) / filename
+    classifier = cv2.CascadeClassifier(str(path))
+    if classifier.empty():
+        raise FacePocError(f"Cascade tidak dapat dimuat: {path}")
+    return classifier
+
+
+def detect_single_face(image: np.ndarray) -> tuple[int, int, int, int]:
+    """Return one provisional face box and reject zero or multiple faces."""
+
+    # Return coordinates in the caller's frame, not a resized 200x200 space.
+    gray = cv2.equalizeHist(to_grayscale(image))
+    boxes = _cascade("haarcascade_frontalface_default.xml").detectMultiScale(
+        gray, scaleFactor=1.1, minNeighbors=5, minSize=(40, 40)
+    )
+    if len(boxes) != 1:
+        raise FacePocError(f"Frame harus memiliki tepat satu wajah; terdeteksi {len(boxes)}.")
+    x, y, width, height = [int(value) for value in boxes[0]]
+    return x, y, width, height
+
+
+def detect_eye_count(face_image: np.ndarray) -> int:
+    """Count eyes using Haar as a preliminary eye-state signal."""
+
+    gray = preprocess_face(face_image)
+    boxes = _cascade("haarcascade_eye_tree_eyeglasses.xml").detectMultiScale(
+        gray, scaleFactor=1.1, minNeighbors=4, minSize=(12, 12)
+    )
+    return int(len(boxes))
+
+
+class ProvisionalBlinkTracker:
+    """Minimal open-then-closed sequence detector for the T04 experiment.
+
+    It is not an anti-spoofing mechanism. A later implementation must bind the
+    challenge to a server session, expiry, replay protection, and face identity.
+    """
+
+    def __init__(self, open_eye_minimum: int = 1) -> None:
+        self.open_eye_minimum = open_eye_minimum
+        self.open_seen = False
+
+    def observe(self, eye_count: int) -> bool:
+        if eye_count >= self.open_eye_minimum:
+            self.open_seen = True
+            return False
+        if self.open_seen and eye_count == 0:
+            self.open_seen = False
+            return True
+        return False
+
+
+def create_lbph_recognizer(threshold: float | None = None) -> Any:
+    """Create the contrib LBPH recognizer without choosing a final threshold."""
+
+    if not hasattr(cv2, "face"):
+        raise FacePocError("Modul cv2.face tidak tersedia; gunakan opencv-contrib-python.")
+    if threshold is None:
+        return cv2.face.LBPHFaceRecognizer_create()
+    return cv2.face.LBPHFaceRecognizer_create(threshold=float(threshold))
+
+
+def train_lbph(images: Iterable[np.ndarray], labels: Iterable[int]) -> Any:
+    """Train LBPH on consistently preprocessed, synthetic/consented samples."""
+
+    processed = [preprocess_face(image) for image in images]
+    label_array = np.asarray(list(labels), dtype=np.int32)
+    if not processed or len(processed) != len(label_array):
+        raise FacePocError("Jumlah sample dan label harus sama dan tidak boleh kosong.")
+    recognizer = create_lbph_recognizer()
+    recognizer.train(processed, label_array)
+    return recognizer
+
+
+def predict_lbph(recognizer: Any, image: np.ndarray) -> tuple[int, float]:
+    """Return LBPH's label and distance; distance is not an accuracy probability."""
+
+    label, distance = recognizer.predict(preprocess_face(image))
+    return int(label), float(distance)
