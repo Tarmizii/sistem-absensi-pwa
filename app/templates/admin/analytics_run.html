@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% from 'components/navigation.html' import admin_sidebar with context %}
+{% block title %}Hasil Analisis {{ model.run.id }} — Sistem Presensi{% endblock %}
+{% block body_class %}admin-page{% endblock %}
+{% block body %}
+<div class="app-shell admin-shell">
+  {{ admin_sidebar('analytics') }}
+  <main class="main-content" aria-labelledby="kmeans-run-title">
+    <div class="desktop-only-notice" role="note">Admin dirancang untuk layar desktop dengan lebar minimal 1024px.</div>
+    <header class="content-header"><div><p class="eyebrow">Run analisis #{{ model.run.id }} · {{ model.run.academic_year_name }}</p><h1 id="kmeans-run-title" class="display-title">Hasil K-Means.</h1><p class="muted-copy">Periode {{ model.run.period_start }} sampai {{ model.run.period_end }} · formula {{ model.run.formula_version }} · aturan label {{ model.run.label_rule_version }}</p></div><a class="ghost-button" href="{{ url_for('admin.analytics') }}">Kembali ke analitik</a></header>
+    {% if model.run.reconstructed_snapshot_dates %}<p class="flash flash-info" role="note">{{ model.run.reconstructed_snapshot_dates }} tanggal memakai snapshot yang direkonstruksi dari histori jadwal.</p>{% endif %}
+    <section class="panel teacher-overview" aria-labelledby="kmeans-overview-title"><div class="teacher-overview-heading"><div><p class="eyebrow">Run tersimpan · dibuat {{ model.run.created_at }}</p><h2 class="panel-title" id="kmeans-overview-title">Ringkasan hasil</h2></div><p class="teacher-total"><strong>{{ model.run.eligible_students }}</strong><span>Siswa layak · {{ model.run.ineligible_students }} tidak layak</span></p></div><dl class="teacher-summary-list"><div><dt>Cluster</dt><dd>{{ model.run.cluster_count }}</dd></div><div><dt>Random state</dt><dd>{{ model.run.random_state }}</dd></div><div><dt>Inisialisasi</dt><dd>{{ model.run.n_init }}</dd></div></dl></section>
+
+    <section class="panel kmeans-chart-panel" aria-labelledby="kmeans-centroid-title"><div><p class="eyebrow">Centroid skala asli</p><h2 class="panel-title" id="kmeans-centroid-title">Profil tiga kelompok</h2><p class="muted-copy">Grafik memisahkan persen kehadiran dari jumlah Terlambat dan Alpa agar satuan tidak tercampur. Tabel berisi angka yang sama dalam skala asli.</p></div>
+      <script type="application/json" id="kmeans-chart-data">{{ chart_data|tojson }}</script>
+      <div class="kmeans-charts"><div><h3 class="panel-title">Kehadiran (%)</h3><canvas id="kmeans-attendance-chart" role="img" aria-label="Grafik centroid persentase kehadiran"></canvas></div><div><h3 class="panel-title">Terlambat (hari)</h3><canvas id="kmeans-late-chart" role="img" aria-label="Grafik centroid jumlah terlambat"></canvas></div><div><h3 class="panel-title">Alpa (hari)</h3><canvas id="kmeans-alpha-chart" role="img" aria-label="Grafik centroid jumlah Alpa"></canvas></div></div>
+      <div class="table-wrap" tabindex="0" aria-label="Tabel centroid, dapat digulir mendatar"><table class="data-table"><caption class="sr-only">Centroid K-Means dalam skala asli</caption><thead><tr><th scope="col">Cluster</th><th scope="col">Kehadiran</th><th scope="col">Terlambat</th><th scope="col">Alpa</th><th scope="col">Jumlah siswa</th></tr></thead><tbody>{% for row in centroids %}<tr><th scope="row">{{ row.label|title }}</th><td>{{ '%.2f'|format(row.attendance_percentage) }}%</td><td>{{ row.late_count }}</td><td>{{ row.alpha_count }}</td><td>{{ row.student_count }}</td></tr>{% endfor %}</tbody></table></div>
+    </section>
+
+    <section class="panel teacher-table-panel" aria-labelledby="kmeans-results-title"><div class="teacher-section-heading"><div><p class="eyebrow">Data yang disimpan pada run ini</p><h2 class="panel-title" id="kmeans-results-title">{{ model.results|length }} siswa</h2></div></div>
+      {% if model.results %}<div class="table-wrap" tabindex="0" aria-label="Hasil siswa, dapat digulir mendatar"><table class="data-table"><caption class="sr-only">Hasil K-Means per siswa</caption><thead><tr><th scope="col">Siswa</th><th scope="col">Kelas</th><th scope="col">Kehadiran</th><th scope="col">Terlambat</th><th scope="col">Alpa</th><th scope="col">Hasil cluster</th><th scope="col">Kelayakan</th><th scope="col">Hari rekonstruksi</th></tr></thead><tbody>{% for row in model.results %}<tr><td>{{ row.full_name }}<br><span class="muted-copy">NISN {{ row.nisn }}</span></td><td>{{ row.class_name }}</td><td>{% if row.attendance_percentage is not none %}{{ '%.2f'|format(row.attendance_percentage|float) }}%{% else %}—{% endif %}</td><td>{{ row.late_count }}</td><td>{{ row.alpha_count }}</td><td>{{ row.cluster_label|title if row.cluster_label else '—' }}</td><td>{{ 'Layak' if row.is_eligible else row.ineligible_reason }}</td><td>{{ row.reconstructed_days }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state"><p class="muted-copy">Run ini tidak memiliki baris siswa.</p></div>{% endif %}
+    </section>
+  </main>
+</div>
+<script defer src="{{ url_for('static', filename='js/vendor/chart.umd.min.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/admin-kmeans.js') }}"></script>
+{% endblock %}

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Uji kamera T04 — SMA Negeri 4 Lhokseumawe{% endblock %}
-{% block body_class %}student-page{% endblock %}
+{% block theme_color %}#F6F4EE{% endblock %}
+{% block body_class %}student-page t04-poc-page{% endblock %}
 {% block body %}
 <main class="student-shell main-content" id="poc" data-csrf="{{ csrf }}">
   <header class="content-header"><div><p class="eyebrow">Percobaan biometrik · T04</p><h1 class="display-title">Uji kamera Android.</h1><p class="muted-copy">SMA Negeri 4 Lhokseumawe</p></div></header>
@@ -21,8 +22,9 @@
   <div class="bento-grid">
     <section class="panel panel-span-12">
       <h2 class="panel-title">1. Nyalakan kamera depan</h2>
-      <p class="muted-copy">Frame dikirim ke laptop untuk dianalisis. Sampel dan model hanya ada sementara di memori, tidak masuk database presensi.</p>
-      <label class="flex gap-3 items-start my-4"><input type="checkbox" id="consent" class="mt-1"><span>Saya dan peserta uji menyetujui penggunaan wajah untuk percobaan ini.</span></label>
+      {% if config.PUBLIC_TUNNEL %}<p class="flash flash-warning" role="note">Frame wajah dikirim melalui jaringan Cloudflare ke laptop untuk dianalisis. Pastikan peserta memahami rute ini dan setujui penggunaan data sebelum melanjutkan.</p>{% endif %}
+      <p class="muted-copy">Frame diproses sementara; sampel dan model berada di memori laptop dan tidak masuk database presensi. Laporan JSON hanya mencatat sinyal serta skor, tanpa foto.</p>
+      <label class="flex gap-3 items-start my-4"><input type="checkbox" id="consent" class="mt-1"><span>Saya memahami alur pengiriman frame dan peserta uji menyetujui penggunaan wajah untuk percobaan ini.</span></label>
       <video id="camera" autoplay playsinline muted class="w-full aspect-[3/4] object-cover rounded-2xl bg-ink" aria-label="Pratinjau kamera depan"></video>
       <div class="flex flex-wrap gap-3 mt-4"><button id="start" type="button" class="primary-button" disabled>Nyalakan kamera</button><button id="stop" type="button" class="ghost-button" disabled>Matikan kamera</button></div>
       <p id="status" class="flash mt-4" role="status" aria-live="polite">Kamera belum aktif. Izinkan kamera setelah menekan tombol.</p>

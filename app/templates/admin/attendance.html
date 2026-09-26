@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% from 'components/navigation.html' import admin_sidebar with context %}
+{% from 'components/icons.html' import icon %}
+{% block title %}Monitoring Presensi — Sistem Presensi{% endblock %}
+{% block body_class %}admin-page{% endblock %}
+{% block body %}
+<div class="app-shell admin-shell">
+  {{ admin_sidebar('attendance') }}
+  <main class="main-content" aria-labelledby="admin-attendance-title">
+    <div class="desktop-only-notice" role="note">Admin dirancang untuk layar desktop dengan lebar minimal 1024px.</div>
+    <header class="content-header">
+      <div><p class="eyebrow">Pemantauan sekolah</p><h1 id="admin-attendance-title" class="display-title">Monitoring presensi.</h1><p class="muted-copy">Record tersimpan dan ringkasan roster aktif untuk satu tanggal.</p></div>
+    </header>
+
+    <form class="teacher-filter-form" method="get" action="{{ url_for('admin.attendance') }}" novalidate>
+      <div class="field"><label for="admin-attendance-date">Tanggal</label><input id="admin-attendance-date" name="date" type="date" value="{{ model.date if model else filters.date }}" required></div>
+      <div class="field"><label for="admin-attendance-class">Kelas</label><select id="admin-attendance-class" name="class_id"><option value="">Semua kelas</option>{% if model %}{% for item in model.classes %}<option value="{{ item.class_id }}" {% if model.class_id == item.class_id|string %}selected{% endif %}>{{ item.class_name }} · {{ item.academic_year_name }}{% if not item.class_active or not item.academic_year_active %} (nonaktif){% endif %}</option>{% endfor %}{% endif %}</select></div>
+      <div class="field"><label for="admin-attendance-status">Status tersimpan</label><select id="admin-attendance-status" name="status"><option value="">Semua status</option>{% for key, label in [('present','Hadir'),('late','Terlambat'),('permit','Izin'),('sick','Sakit'),('absent','Alpa')] %}<option value="{{ key }}" {% if (model.status if model else filters.status) == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div class="field teacher-search-field"><label for="admin-attendance-search">Nama atau NISN</label><input id="admin-attendance-search" name="q" type="text" maxlength="100" value="{{ model.q if model else filters.q }}" autocomplete="off"></div>
+      <button class="primary-button" type="submit">Terapkan filter</button>
+    </form>
+
+    {% if database_unavailable %}
+      <section class="panel empty-state" role="alert"><h2 class="panel-title">Monitoring belum dapat dimuat</h2><p class="muted-copy">Periksa koneksi database, lalu coba muat ulang halaman.</p><a class="primary-button" href="{{ retry_url }}">Coba muat ulang</a></section>
+    {% else %}
+      <section class="panel teacher-overview" aria-labelledby="admin-summary-title">
+        <div class="teacher-overview-heading"><div><p class="eyebrow">Ringkasan {{ model.date }}{% if model.selected_class %} · {{ model.selected_class.class_name }}{% else %} · seluruh kelas{% endif %}</p><h2 class="panel-title" id="admin-summary-title">{{ 'Ringkasan roster aktif' if model.is_today else 'Status tersimpan' }}</h2></div><p class="teacher-total"><strong>{{ model.summary.total }}</strong><span>{{ 'Siswa aktif' if model.is_today else 'Status tersimpan' }}</span></p></div>
+        <dl class="teacher-summary-list">
+          {% for key, label in [('present','Hadir'),('late','Terlambat'),('permit','Izin'),('sick','Sakit'),('absent','Alpa'),('pending','Belum Absen')] %}
+            <div data-status="{{ key }}"><dt>{{ label }}</dt><dd>{{ model.summary[key] }}</dd></div>
+          {% endfor %}
+        </dl>
+        {% if not model.is_today %}<p class="muted-copy">Histori lampau hanya menjumlahkan status pada record tersimpan; daftar Siswa historis tidak direkonstruksi.</p>{% endif %}
+      </section>
+
+      <section class="panel teacher-table-panel" aria-labelledby="admin-journal-title">
+        <div class="teacher-section-heading"><div><p class="eyebrow">Jurnal harian</p><h2 id="admin-journal-title" class="panel-title">{{ model.total }} record cocok</h2></div><a class="ghost-button" href="{{ url_for('admin.attendance_export', date=model.date, class_id=model.class_id or None, status=model.status or None, q=model.q or None) }}">Unduh Excel</a></div>
+        {% if model.rows %}
+          <div class="table-wrap" tabindex="0" aria-label="Tabel monitoring presensi, dapat digulir mendatar">
+            <table class="data-table"><caption class="sr-only">Monitoring presensi tanggal {{ model.date }}</caption><thead><tr><th scope="col">Tanggal</th><th scope="col">Kelas</th><th scope="col">Siswa</th><th scope="col">Status</th><th scope="col">Masuk</th><th scope="col">Pulang</th><th scope="col">Keterangan</th><th scope="col">Bukti</th></tr></thead><tbody>
+              {% for row in model.rows %}<tr><td>{{ row.date }}</td><td>{{ row.class_name or 'Kelas lama tidak tercatat' }}</td><td><a class="table-primary-link" href="{{ url_for('admin.student_detail', student_id=row.student_id, month=row.date[:7]) }}">{{ row.full_name }}</a><br><span class="muted-copy">NISN {{ row.nisn }}</span></td><td><span class="status-badge {{ 'status-success' if row.status == 'present' else 'status-warning' if row.status == 'late' else 'status-info' if row.status in ['permit','sick'] else 'status-danger' }}">{{ row.status_label }}</span></td><td>{{ row.checkin_time or '—' }}</td><td>{{ row.checkout_time or '—' }}</td><td>{{ row.notes or '—' }}</td><td><a class="ghost-button evidence-detail-link" href="{{ url_for('attendance.evidence_detail', record_id=row.record_id) }}">Lihat detail</a></td></tr>{% endfor %}
+            </tbody></table>
+          </div>
+          <nav class="teacher-pagination" aria-label="Halaman jurnal Admin"><p class="muted-copy">Halaman {{ model.page }} dari {{ model.pages }} · {{ model.total }} record</p><div>{% if model.page > 1 %}<a class="ghost-button" href="{{ url_for('admin.attendance', date=model.date, class_id=model.class_id or None, status=model.status or None, q=model.q or None, page=model.page - 1) }}">Sebelumnya</a>{% else %}<span class="ghost-button" aria-disabled="true">Sebelumnya</span>{% endif %}{% if model.page < model.pages %}<a class="ghost-button" href="{{ url_for('admin.attendance', date=model.date, class_id=model.class_id or None, status=model.status or None, q=model.q or None, page=model.page + 1) }}">Berikutnya</a>{% else %}<span class="ghost-button" aria-disabled="true">Berikutnya</span>{% endif %}</div></nav>
+        {% else %}
+          <div class="empty-state"><h3 class="panel-title">Tidak ada record yang cocok</h3><p class="muted-copy">Periksa tanggal, kelas, status, atau pencarian. Status yang belum tersimpan tidak ditambahkan ke jurnal.</p></div>
+        {% endif %}
+      </section>
+    {% endif %}
+  </main>
+</div>
+{% endblock %}

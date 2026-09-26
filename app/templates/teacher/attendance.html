@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% from 'components/navigation.html' import teacher_sidebar, bottom_nav with context %}
+{% from 'components/teacher_class_control.html' import class_control %}
+{% block title %}Presensi Kelas — Sistem Presensi{% endblock %}
+{% block body_class %}teacher-page{% endblock %}
+{% block body %}
+<div class="teacher-shell"><div class="app-shell">
+  {{ teacher_sidebar('attendance') }}
+  <main class="main-content" aria-labelledby="teacher-attendance-title">
+    <header class="content-header"><div><p class="eyebrow">Jurnal presensi</p><h1 id="teacher-attendance-title" class="display-title">Presensi kelas</h1><p class="muted-copy">Satu baris untuk setiap record siswa pada tanggal tersebut.</p></div><a class="profile-chip" href="{{ url_for('role.teacher_profile') }}">Profil Guru</a></header>
+    {% if not model.classes %}
+      <section class="panel empty-state illustrated-empty-state"><img class="empty-state-illustration" src="{{ url_for('static', filename='illustrations/empty.svg') }}" width="360" height="220" alt=""><h2 class="panel-title">Belum ada kelas tugas</h2><p class="muted-copy">Hubungi Admin sekolah untuk menetapkan kelas.</p></section>
+    {% else %}
+      {{ class_control(model.classes, model.selected_class, url_for('teacher.attendance'), 'Tampilkan') }}
+      {% if model.selected_class %}
+        <form class="teacher-filter-form" method="get" action="{{ url_for('teacher.attendance') }}" novalidate>
+          <input type="hidden" name="class_id" value="{{ model.selected_class.class_id }}">
+          <div class="field"><label for="teacher-month">Bulan</label><input id="teacher-month" name="month" type="month" value="{{ model.month }}"></div>
+          <div class="field"><label for="teacher-status">Status tersimpan</label><select id="teacher-status" name="status"><option value="">Semua status</option>{% for key, label in [('present','Hadir'),('late','Terlambat'),('permit','Izin'),('sick','Sakit'),('absent','Alpa')] %}<option value="{{ key }}" {% if model.status == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+          <div class="field teacher-search-field"><label for="teacher-search">Nama atau NISN</label><input id="teacher-search" name="q" type="text" maxlength="100" value="{{ model.q }}" autocomplete="off" aria-describedby="teacher-search-help"><span class="sr-only" id="teacher-search-help">Cari nama atau NISN pada kelas dan bulan terpilih.</span></div>
+          <button class="primary-button" type="submit">Terapkan filter</button>
+          {% if model.q %}<a class="ghost-button" aria-label="Hapus pencarian" href="{{ url_for('teacher.attendance', class_id=model.selected_class.class_id, month=model.month, status=model.status, page=1) }}">Hapus pencarian</a>{% endif %}
+        </form>
+        <section class="panel teacher-table-panel" aria-labelledby="teacher-journal-title">
+          <div class="teacher-section-heading"><div><p class="eyebrow">{{ model.selected_class.class_name }} · {{ model.selected_class.academic_year_name }}</p><h2 id="teacher-journal-title" class="panel-title">{{ model.month }} · {{ model.total }} record</h2></div></div>
+          {% if model.rows %}
+            <div class="table-wrap" tabindex="0" aria-label="Tabel jurnal presensi, dapat digulir mendatar">
+              <table class="data-table"><caption class="sr-only">Jurnal presensi kelas {{ model.selected_class.class_name }} bulan {{ model.month }}</caption><thead><tr><th scope="col">Tanggal</th><th scope="col">Siswa</th><th scope="col">Status</th><th scope="col">Masuk</th><th scope="col">Pulang</th><th scope="col">Keterangan</th></tr></thead><tbody>
+                {% for row in model.rows %}<tr><td>{{ row.date }}</td><td><a class="table-primary-link" href="{{ url_for('teacher.student_detail', student_id=row.student_id, class_id=model.selected_class.class_id, month=model.month, date=row.date, source='attendance', status=model.status, q=model.q, page=model.page) }}">{{ row.full_name }}</a><br><span class="muted-copy">NISN {{ row.nisn }}</span></td><td><span class="status-badge {{ 'status-success' if row.status == 'present' else 'status-warning' if row.status == 'late' else 'status-info' if row.status in ['permit','sick'] else 'status-danger' }}">{{ row.status_label }}</span></td><td>{{ row.checkin_time or '—' }}</td><td>{{ row.checkout_time or '—' }}</td><td>{{ row.notes or '—' }}</td></tr>{% endfor %}
+              </tbody></table>
+            </div>
+            <nav class="teacher-pagination" aria-label="Halaman jurnal"><p class="muted-copy">Halaman {{ model.page }} dari {{ model.pages }} · {{ model.total }} record</p><div>{% if model.page > 1 %}<a class="ghost-button" href="{{ url_for('teacher.attendance', class_id=model.selected_class.class_id, month=model.month, status=model.status, q=model.q or None, page=model.page - 1) }}">Sebelumnya</a>{% else %}<span class="ghost-button" aria-disabled="true">Sebelumnya</span>{% endif %}{% if model.page < model.pages %}<a class="ghost-button" href="{{ url_for('teacher.attendance', class_id=model.selected_class.class_id, month=model.month, status=model.status, q=model.q or None, page=model.page + 1) }}">Berikutnya</a>{% else %}<span class="ghost-button" aria-disabled="true">Berikutnya</span>{% endif %}</div></nav>
+          {% else %}
+            <div class="empty-state illustrated-empty-state"><img class="empty-state-illustration" src="{{ url_for('static', filename='illustrations/empty.svg') }}" width="360" height="220" alt=""><h3 class="panel-title">Tidak ada record yang cocok</h3><p class="muted-copy">Periksa bulan, status, atau pencarian. Presensi yang belum tersimpan terlihat pada ringkasan dashboard.</p>{% if model.status or model.q %}<a class="ghost-button" href="{{ url_for('teacher.attendance', class_id=model.selected_class.class_id, month=model.month) }}">Hapus semua filter</a>{% endif %}</div>
+          {% endif %}
+        </section>
+      {% endif %}
+    {% endif %}
+  </main>
+</div>{{ bottom_nav('teacher', 'attendance') }}</div>
+{% endblock %}

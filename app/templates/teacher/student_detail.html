@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% from 'components/navigation.html' import teacher_sidebar, bottom_nav with context %}
+{% from 'components/teacher_class_control.html' import class_control %}
+{% block title %}Detail Siswa — Sistem Presensi{% endblock %}
+{% block body_class %}teacher-page{% endblock %}
+{% block body %}
+{% set source = request.args.get('source') %}
+{% if source == 'attendance' %}
+  {% set back_url = url_for('teacher.attendance', class_id=model.selected_class.class_id, month=request.args.get('month'), status=request.args.get('status'), q=request.args.get('q'), page=request.args.get('page')) %}
+{% elif source == 'students' %}
+  {% set back_url = url_for('teacher.students', class_id=model.selected_class.class_id, q=request.args.get('q'), page=request.args.get('page')) %}
+{% else %}
+  {% set back_url = url_for('role.teacher_dashboard', class_id=model.selected_class.class_id) %}
+{% endif %}
+<div class="teacher-shell"><div class="app-shell">
+  {{ teacher_sidebar('students') }}
+  <main class="main-content" aria-labelledby="teacher-student-detail-title">
+    <header class="content-header"><div><p class="eyebrow">Histori siswa</p><h1 id="teacher-student-detail-title" class="display-title">{{ model.student.full_name }}</h1><p class="muted-copy">NISN {{ model.student.nisn }} · {{ model.selected_class.class_name }} · {{ model.selected_class.academic_year_name }}{% if not model.student.is_active %} · akun nonaktif{% endif %}</p></div><a class="profile-chip" href="{{ url_for('role.teacher_profile') }}">Profil Guru</a></header>
+    {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-stack" aria-live="polite">{% for category, message in messages %}<p class="flash flash-{{ category }}" role="alert">{{ message }}</p>{% endfor %}</div>{% endif %}{% endwith %}
+    <div class="teacher-detail-back"><a class="ghost-button" href="{{ back_url }}">Kembali ke {{ 'jurnal presensi' if source == 'attendance' else 'daftar siswa' if source == 'students' else 'dashboard' }}</a></div>
+    {{ class_control(model.classes, model.selected_class, url_for('teacher.student_detail', student_id=model.student.student_id, source=source, status=request.args.get('status'), q=request.args.get('q'), page=request.args.get('page')), 'Ganti kelas') }}
+    <form class="teacher-filter-form teacher-month-form" method="get" action="{{ url_for('teacher.student_detail', student_id=model.student.student_id) }}" novalidate>
+      <input type="hidden" name="class_id" value="{{ model.selected_class.class_id }}"><input type="hidden" name="source" value="{{ source or '' }}">
+      {% if request.args.get('status') %}<input type="hidden" name="status" value="{{ request.args.get('status') }}">{% endif %}{% if request.args.get('q') %}<input type="hidden" name="q" value="{{ request.args.get('q') }}">{% endif %}{% if request.args.get('page') %}<input type="hidden" name="page" value="{{ request.args.get('page') }}">{% endif %}
+      <div class="field"><label for="teacher-detail-month">Bulan histori</label><input id="teacher-detail-month" name="month" type="month" value="{{ model.month }}"></div><button class="ghost-button" type="submit">Tampilkan bulan</button>
+    </form>
+    <section class="panel teacher-calendar-panel" aria-labelledby="teacher-history-calendar-title">
+      <div class="teacher-section-heading"><div><p class="eyebrow">{{ model.selected_class.class_name }}</p><h2 id="teacher-history-calendar-title" class="panel-title">{{ model.month_label }}</h2></div><p class="muted-copy">Hanya record tersimpan ditampilkan sebagai status presensi.</p></div>
+      <ul class="attendance-legend" aria-label="Keterangan kalender"><li><span class="attendance-dot attendance-status-present" aria-hidden="true"></span>Record presensi</li><li><span class="attendance-dot attendance-status-no_record" aria-hidden="true"></span>Tidak ada record</li></ul>
+      <div class="attendance-calendar-scroll"><table class="attendance-calendar"><caption class="sr-only">Histori {{ model.student.full_name }} pada kelas {{ model.selected_class.class_name }}, {{ model.month_label }}</caption><thead><tr>{% for day_name in ['Sen','Sel','Rab','Kam','Jum','Sab','Min'] %}<th scope="col">{{ day_name }}</th>{% endfor %}</tr></thead><tbody>{% for week in model.weeks %}<tr>{% for day in week %}{% if day %}<td><a class="attendance-calendar-day attendance-status-{{ day.status_key }} {{ 'is-selected' if day.is_selected else '' }}" href="{{ url_for('teacher.student_detail', student_id=model.student.student_id, class_id=model.selected_class.class_id, month=model.month, date=day.date, source=source, status=request.args.get('status'), q=request.args.get('q'), page=request.args.get('page')) }}" aria-current="{{ 'date' if day.is_selected else 'false' }}" aria-label="{{ day.day }}: {{ day.status }}"><span>{{ day.day }}</span><small>{{ day.status }}</small></a></td>{% else %}<td class="attendance-calendar-empty" aria-hidden="true"></td>{% endif %}{% endfor %}</tr>{% endfor %}</tbody></table></div>
+    </section>
+    <section class="panel teacher-student-day-detail" aria-live="polite">
+      <p class="eyebrow">Rincian tanggal</p>
+      {% if model.detail %}<h2 class="panel-title">{{ model.detail.date }}</h2><p class="panel-value">{{ model.detail.status_label }}</p>
+        {% if model.detail.checkin_time or model.detail.checkout_time %}<dl class="profile-details attendance-detail-times"><div><dt>Masuk</dt><dd>{{ model.detail.checkin_time or '—' }}</dd></div><div><dt>Pulang</dt><dd>{{ model.detail.checkout_time or '—' }}</dd></div>{% if model.detail.source_label %}<div><dt>Sumber</dt><dd>{{ model.detail.source_label }}</dd></div>{% endif %}</dl>{% endif %}
+        {% if model.detail.notes %}<p class="muted-copy">Keterangan: {{ model.detail.notes }}</p>{% endif %}
+        {% if model.detail.record_id %}<a class="ghost-button evidence-detail-link" href="{{ url_for('attendance.evidence_detail', record_id=model.detail.record_id) }}">Lihat bukti presensi</a>{% endif %}
+      {% else %}<p class="muted-copy">Pilih tanggal pada kalender untuk melihat detail record.</p>{% endif %}
+    </section>
+    {% if model.selected_date == model.today %}
+      <section class="panel teacher-manual-status" aria-labelledby="teacher-manual-status-title">
+        <p class="eyebrow">Tindakan hari ini</p><h2 class="panel-title" id="teacher-manual-status-title">Status manual</h2>
+        {% if model.manual_status.available %}
+          <p class="muted-copy">Hadir/Terlambat dari presensi otomatis tidak dapat diubah. Keterangan wajib untuk Izin dan Sakit.</p>
+          <form method="post" action="{{ url_for('teacher.student_manual_status', student_id=model.student.student_id) }}" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="class_id" value="{{ model.selected_class.class_id }}">
+            <div class="field"><label for="teacher-manual-status">Status</label><select id="teacher-manual-status" name="status" required><option value="" disabled {% if not model.manual_status.current_status %}selected{% endif %}>Pilih status</option><option value="permit" {% if model.manual_status.current_status == 'permit' %}selected{% endif %}>Izin</option><option value="sick" {% if model.manual_status.current_status == 'sick' %}selected{% endif %}>Sakit</option><option value="absent" {% if model.manual_status.current_status == 'absent' %}selected{% endif %} {% if not model.manual_status.can_mark_absent %}disabled{% endif %}>Alpa{% if not model.manual_status.can_mark_absent %} — setelah cutoff{% endif %}</option></select></div>
+            <div class="field"><label for="teacher-manual-notes">Keterangan</label><textarea id="teacher-manual-notes" name="notes" maxlength="500" aria-describedby="teacher-manual-notes-help">{{ model.detail.notes or '' }}</textarea><span id="teacher-manual-notes-help" class="muted-copy">Wajib diisi untuk status Izin atau Sakit. Maksimal 500 karakter.</span></div>
+            <button class="primary-button" type="submit">Simpan status</button>
+          </form>
+          {% if model.manual_status.can_clear %}<form class="teacher-manual-clear" method="post" action="{{ url_for('teacher.student_manual_status', student_id=model.student.student_id) }}" novalidate><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="class_id" value="{{ model.selected_class.class_id }}"><input type="hidden" name="status" value="clear"><button class="ghost-button" type="submit">Batalkan status manual</button></form>{% endif %}
+        {% else %}<p class="muted-copy">{{ model.manual_status.reason or 'Status manual tidak tersedia karena presensi otomatis sudah tercatat.' }}</p>{% endif %}
+      </section>
+    {% endif %}
+  </main>
+</div>{{ bottom_nav('teacher', 'students') }}</div>
+{% endblock %}

@@ -18,7 +18,7 @@
     {% endif %}{% endwith %}
 
     <section class="bento-grid">
-      <article class="panel panel-span-5">
+      <article class="panel panel-span-4">
         <p class="eyebrow">{{ 'Perbarui exception' if exception else 'Exception baru' }}</p>
         <h2 class="panel-title" style="margin-top:.7rem">{{ 'Edit exception' if exception else 'Atur tanggal khusus' }}</h2>
         <form method="post" action="{{ url_for('admin.schedule_exception_edit', exception_id=exception.exception_id) if exception else url_for('admin.schedule_exception_list') }}" novalidate>
@@ -38,50 +38,54 @@
           <div class="field"><label for="exception_type">Jenis</label><select id="exception_type" name="exception_type" required>
             {% for key, label in exception_types %}<option value="{{ key }}" {{ 'selected' if values.exception_type == key else '' }}>{{ label }}</option>{% endfor %}
           </select></div>
-          <p class="muted-copy">Waktu boleh dikosongkan agar mewarisi exception sekolah atau jadwal reguler. Hari libur tidak menerima presensi.</p>
-          <div class="field"><label for="checkin_start">Mulai check-in</label><input id="checkin_start" type="time" name="checkin_start" value="{{ values.checkin_start }}"></div>
-          <div class="field"><label for="late_after">Mulai terlambat</label><input id="late_after" type="time" name="late_after" value="{{ values.late_after }}"></div>
-          <div class="field"><label for="checkin_cutoff">Cutoff check-in</label><input id="checkin_cutoff" type="time" name="checkin_cutoff" value="{{ values.checkin_cutoff }}"></div>
-          <div class="field"><label for="checkout_start">Mulai check-out</label><input id="checkout_start" type="time" name="checkout_start" value="{{ values.checkout_start }}"></div>
+          <p class="muted-copy exception-note">Waktu boleh dikosongkan agar mewarisi exception sekolah atau jadwal reguler. Hari libur tidak menerima presensi.</p>
+          <div class="form-grid exception-time-grid">
+            <div class="field"><label for="checkin_start">Mulai check-in</label><input id="checkin_start" type="time" name="checkin_start" value="{{ values.checkin_start }}"></div>
+            <div class="field"><label for="late_after">Mulai terlambat</label><input id="late_after" type="time" name="late_after" value="{{ values.late_after }}"></div>
+            <div class="field"><label for="checkin_cutoff">Cutoff check-in</label><input id="checkin_cutoff" type="time" name="checkin_cutoff" value="{{ values.checkin_cutoff }}"></div>
+            <div class="field"><label for="checkout_start">Mulai check-out</label><input id="checkout_start" type="time" name="checkout_start" value="{{ values.checkout_start }}"></div>
+          </div>
           <button class="primary-button button-wide" type="submit">{{ icon('check') }}{{ 'Simpan perubahan' if exception else 'Simpan exception' }}</button>
           {% if exception %}<a class="ghost-button button-wide" href="{{ url_for('admin.schedule_exception_list') }}">Batal edit</a>{% endif %}
         </form>
       </article>
 
-      <article class="panel panel-span-7">
+      <article class="panel panel-span-8">
         <p class="eyebrow">Pemeriksaan sebelum diterapkan</p><h2 class="panel-title" style="margin-top:.7rem">Preview jadwal efektif</h2>
         <p class="muted-copy">Pilih tanggal dan kelas untuk melihat hasil gabungan aturan yang akan dipakai server.</p>
         <form method="get" action="{{ url_for('admin.schedule_exception_preview') }}" novalidate>
-          <div class="field"><label for="preview_year">Tahun ajaran</label><select id="preview_year" name="academic_year_id"><option value="">Tahun ajaran aktif</option>
-            {% for year in years %}<option value="{{ year.id }}" {{ 'selected' if preview_values.academic_year_id == year.id|string else '' }}>{{ year.name }}{{ ' · aktif' if year.is_active else '' }}</option>{% endfor %}
-          </select></div>
-          <div class="field"><label for="preview_date">Tanggal</label><input id="preview_date" name="exception_date" type="date" value="{{ preview_values.exception_date }}" required></div>
-          <div class="field"><label for="preview_class">Kelas <span class="muted-copy">(opsional)</span></label><select id="preview_class" name="class_id"><option value="">Tanpa kelas</option>
-            {% for klass in classes %}<option value="{{ klass.class_id }}" {{ 'selected' if preview_values.class_id == klass.class_id|string else '' }}>{{ klass.name }}</option>{% endfor %}
-          </select></div>
-          <button class="ghost-button" type="submit">Lihat preview</button>
+          <div class="form-grid preview-form-grid">
+            <div class="field"><label for="preview_year">Tahun ajaran</label><select id="preview_year" name="academic_year_id"><option value="">Tahun ajaran aktif</option>
+              {% for year in years %}<option value="{{ year.id }}" {{ 'selected' if preview_values.academic_year_id == year.id|string else '' }}>{{ year.name }}{{ ' · aktif' if year.is_active else '' }}</option>{% endfor %}
+            </select></div>
+            <div class="field"><label for="preview_date">Tanggal</label><input id="preview_date" name="exception_date" type="date" value="{{ preview_values.exception_date }}" required></div>
+            <div class="field"><label for="preview_class">Kelas <span class="muted-copy">(opsional)</span></label><select id="preview_class" name="class_id"><option value="">Tanpa kelas</option>
+              {% for klass in classes %}<option value="{{ klass.class_id }}" {{ 'selected' if preview_values.class_id == klass.class_id|string else '' }}>{{ klass.name }}</option>{% endfor %}
+            </select></div>
+          </div>
+          <button class="ghost-button button-wide" type="submit">Lihat preview</button>
         </form>
-        {% if preview_error %}<div class="flash flash-error" role="alert" style="margin-top:1rem">{{ preview_error }}</div>
+        {% if preview_error %}<div class="flash flash-error preview-empty" role="alert">{{ preview_error }}</div>
         {% elif preview_values.exception_date %}
-          {% if preview %}<div class="panel" style="margin-top:1rem">
+          {% if preview %}<div class="preview-result">
             <p class="eyebrow">{{ preview.for_date.strftime('%d/%m/%Y') }} · {{ preview.source|capitalize }}</p>
             {% if preview.is_holiday %}<p class="panel-title">Libur — tidak ada kewajiban presensi.</p>
             {% else %}<p class="panel-title">{{ 'Exception: ' ~ preview.exception_type if preview.exception_type else 'Jadwal reguler' }}</p>
               {% if preview.schedule_id is defined and preview.schedule_id %}<p class="muted-copy">Mulai {{ preview.checkin_start or '—' }} · Terlambat {{ preview.late_after or '—' }} · Cutoff {{ preview.checkin_cutoff or '—' }} · Check-out {{ preview.checkout_start or '—' }}</p>
               {% else %}<p class="muted-copy">Belum ada jadwal aktif untuk tanggal ini.</p>{% endif %}
             {% endif %}
-          </div>{% else %}<div class="empty-state"><p class="panel-title">Jadwal belum tersedia.</p><p class="muted-copy">Tanggal tidak masuk tahun ajaran atau belum memiliki jadwal aktif maupun exception.</p></div>{% endif %}
-        {% else %}<div class="empty-state"><p class="panel-title">Pilih tanggal untuk mulai.</p><p class="muted-copy">Preview memakai resolver yang sama dengan aturan jadwal server.</p></div>{% endif %}
+          </div>{% else %}<div class="empty-state preview-empty"><p class="panel-title">Jadwal belum tersedia.</p><p class="muted-copy">Tanggal tidak masuk tahun ajaran atau belum memiliki jadwal aktif maupun exception.</p></div>{% endif %}
+        {% else %}<div class="empty-state preview-empty"><p class="panel-title">Pilih tanggal untuk mulai.</p><p class="muted-copy">Preview memakai resolver yang sama dengan aturan jadwal server.</p></div>{% endif %}
       </article>
     </section>
 
-    <section class="panel" style="margin-top:1rem">
-      <div class="admin-toolbar"><div><p class="eyebrow">Konfigurasi tersimpan</p><h2 class="panel-title">Daftar exception</h2></div></div>
-      {% if exceptions %}<div class="table-wrap"><table class="data-table"><thead><tr><th>Tanggal</th><th>Jenis</th><th>Scope</th><th>Tahun ajaran</th><th>Override</th><th>Status</th><th><span class="sr-only">Aksi</span></th></tr></thead><tbody>
+    <section class="panel stack-section">
+      <div class="admin-toolbar"><div><p class="eyebrow">Konfigurasi tersimpan</p><h2 class="panel-title">Daftar exception</h2><p class="muted-copy">{{ exceptions|default([])|length }} exception tersimpan.</p></div></div>
+      {% if exceptions %}<div class="table-wrap"><table class="data-table"><thead><tr><th scope="col">Tanggal</th><th scope="col">Jenis</th><th scope="col">Scope</th><th scope="col">Tahun ajaran</th><th scope="col">Override</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Aksi</span></th></tr></thead><tbody>
         {% for item in exceptions %}<tr>
           <th scope="row">{{ item.exception_date.strftime('%d/%m/%Y') }}</th><td>{{ item.exception_type|replace('_', ' ')|title }}</td>
           <td>{{ 'Sekolah' if item.scope == 'school' else 'Kelas ' ~ item.class_name }}</td><td>{{ item.academic_year_name }}</td>
-          <td>{% if item.exception_type == 'holiday' %}Tidak ada presensi{% else %}{{ item.checkin_start or '—' }} / {{ item.late_after or '—' }} / {{ item.checkin_cutoff or '—' }} / {{ item.checkout_start or '—' }}{% endif %}</td>
+          <td>{% if item.exception_type == 'holiday' %}Tidak ada presensi{% else %}<span class="override-times">{{ item.checkin_start or '—' }} · {{ item.late_after or '—' }} · {{ item.checkin_cutoff or '—' }} · {{ item.checkout_start or '—' }}</span>{% endif %}</td>
           <td><span class="status-badge {{ 'status-success' if item.is_active else 'status-warning' }}">{{ 'Aktif' if item.is_active else 'Nonaktif' }}</span></td>
           <td class="table-actions"><a class="ghost-button" href="{{ url_for('admin.schedule_exception_edit', exception_id=item.exception_id) }}">Edit</a>
             <form method="post" action="{{ url_for('admin.schedule_exception_toggle', exception_id=item.exception_id) }}" novalidate><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="ghost-button" type="submit">{{ 'Nonaktifkan' if item.is_active else 'Aktifkan' }}</button></form></td>

@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% from 'components/navigation.html' import bottom_nav with context %}
+{% from 'components/icons.html' import icon %}
+{% block title %}Beranda Siswa — Sistem Presensi{% endblock %}
+{% block body_class %}student-page{% endblock %}
+{% block head %}
+  {% if state %}
+    <script src="{{ url_for('static', filename='js/attendance-checkin.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/attendance-state.js') }}" defer></script>
+  {% endif %}
+{% endblock %}
+{% block body %}
+<div class="student-shell">
+  <main class="main-content" aria-labelledby="student-home-title">
+    <header class="content-header">
+      <div>
+        <p class="eyebrow">Selamat datang kembali</p>
+        <h1 id="student-home-title" class="display-title">Halo, {{ state.full_name if state else username }}.</h1>
+        <p class="muted-copy">Siap untuk hari yang baik?</p>
+      </div>
+      <a class="profile-chip" href="{{ url_for('role.student_profile') }}"><span class="avatar">{{ (state.full_name if state else username)[:1]|upper }}</span>Profil</a>
+    </header>
+
+    {% if database_unavailable %}
+      <div class="flash flash-error" role="alert">
+        <p>Status presensi belum dapat dimuat. Periksa koneksi lalu coba lagi.</p>
+        <a class="ghost-button" href="{{ url_for('role.student_dashboard') }}">Coba lagi</a>
+      </div>
+    {% elif not_found %}
+      <div class="flash flash-error" role="alert"><p>Profil Siswa tidak ditemukan.</p></div>
+    {% elif state %}
+      <section class="bento-grid" aria-label="Presensi hari ini" id="attendance-today"
+               data-csrf="{{ csrf_token() }}"
+               data-state-url="{{ url_for('student.attendance_state') }}"
+               data-start-url="{{ url_for('attendance.checkin_start') }}"
+               data-frame-url="{{ url_for('attendance.checkin_frame') }}"
+               data-checkout-start-url="{{ url_for('attendance.checkout_start') }}"
+               data-checkout-frame-url="{{ url_for('attendance.checkout_frame') }}">
+        <article class="panel panel-span-12 panel-mint student-attendance-card">
+          <div class="attendance-card-heading">
+            <div><p class="eyebrow">Presensi hari ini</p><h2 class="attendance-card-title">Mulai harimu<br>dengan hadir.</h2></div>
+            <img class="student-illustration attendance-illustration" src="{{ url_for('static', filename='illustrations/attendance-v2.webp') }}" alt="" width="1604" height="980">
+          </div>
+          <div class="attendance-context"><span id="attendance-class-name">{{ state.class_name or 'Kelas belum ditetapkan' }}</span><time id="attendance-today-date" datetime="{{ state.today }}">{{ state.today }}</time></div>
+
+          <button class="primary-button attendance-main-cta" type="button" id="attendance-cta"
+                  data-cta-action="{{ state.state }}" {% if not state.cta_enabled %}disabled aria-disabled="true"{% endif %}>
+            {{ icon('clipboard') }}<span data-cta-text>{{ state.cta_label }}</span>
+          </button>
+          <p class="attendance-server-clock">Waktu sekolah <span id="attendance-server-time">{{ state.server_time }}</span> WIB</p>
+          <p id="attendance-status" class="attendance-feedback" role="status" aria-live="polite" aria-atomic="true">
+            {{ state.reason or '' }}
+          </p>
+          <button id="attendance-refresh" class="ghost-button attendance-refresh" type="button" hidden>Cek status presensi</button>
+          {% if state.predicted_status %}
+            <p id="attendance-prediction" class="attendance-prediction">
+              Check-in terakhir sebelum <strong data-schedule-time="late_after">{{ state.schedule.late_after }}</strong>, status akan tercatat <strong id="attendance-predicted-status">{{ state.predicted_status }}</strong>.
+            </p>
+          {% else %}
+            <p id="attendance-prediction" class="attendance-prediction" hidden></p>
+          {% endif %}
+
+          <section class="enrollment-camera attendance-camera" aria-labelledby="attendance-camera-title" id="attendance-camera-panel" hidden>
+            <h3 id="attendance-camera-title" class="panel-title">Verifikasi wajah</h3>
+            <div class="enrollment-camera-frame">
+              <div class="camera-placeholder" id="attendance-placeholder">
+                <span class="camera-placeholder-mark" aria-hidden="true">●</span>
+                <p>Menyiapkan kamera…</p>
+              </div>
+              <video id="attendance-video" class="enrollment-video" autoplay muted playsinline hidden aria-label="Pratinjau kamera untuk presensi"></video>
+            </div>
+            <div class="enrollment-camera-actions">
+              <button id="attendance-cancel" class="ghost-button button-wide" type="button" hidden>Batalkan presensi</button>
+            </div>
+            <p class="muted-copy enrollment-camera-help">Satu wajah di tengah kamera, lalu kedip satu kali saat diminta. Frame dan lokasi dikirim ke server untuk verifikasi.</p>
+            <figure id="attendance-location-help" class="location-help" hidden>
+              <img src="{{ url_for('static', filename='illustrations/location.svg') }}" width="360" height="220" alt="">
+              <figcaption><p>Periksa izin lokasi dan pastikan perangkat terhubung. Sistem memakai lokasi saat ini untuk memeriksa jarak ke sekolah.</p></figcaption>
+            </figure>
+          </section>
+        </article>
+
+        <article class="panel panel-span-12 student-day-summary">
+          <div class="section-heading"><h2 class="panel-title">Catatan hari ini</h2><span class="status-badge status-info" id="attendance-status-label">{{ state.status_today or 'Belum Absen' }}</span></div>
+          <p class="muted-copy attendance-times">
+            <span><span class="time-label">{{ icon('arrow-left') }}Jam masuk</span><time id="attendance-checkin-time">{{ state.checkin_time or '—' }}</time><small>WIB</small></span>
+            <span><span class="time-label">{{ icon('logout') }}Jam pulang</span><time id="attendance-checkout-time">{{ state.checkout_time or '—' }}</time><small>WIB</small></span>
+          </p>
+          <p id="attendance-status-source" class="muted-copy">{% if state.status_source_label %}Sumber: {{ state.status_source_label }}{% else %}Belum ada presensi tersimpan untuk hari ini.{% endif %}</p>
+        </article>
+
+        <article class="panel panel-span-12 student-schedule-card">
+          <div class="section-heading"><h2 class="panel-title">Jadwal sekolah</h2>{{ icon('calendar') }}</div>
+          {% if state.schedule and not state.schedule.is_holiday %}
+            <dl class="profile-details" id="attendance-schedule-times">
+              <div><dt>Mulai masuk</dt><dd data-schedule-time="checkin_start">{{ state.schedule.checkin_start or '—' }}</dd></div>
+              <div><dt>Terlambat</dt><dd data-schedule-time="late_after">{{ state.schedule.late_after or '—' }}</dd></div>
+              <div><dt>Batas masuk</dt><dd data-schedule-time="checkin_cutoff">{{ state.schedule.checkin_cutoff or '—' }}</dd></div>
+              <div><dt>Mulai pulang</dt><dd data-schedule-time="checkout_start">{{ state.schedule.checkout_start or '—' }}</dd></div>
+            </dl>
+          {% else %}
+            <p id="attendance-schedule-message" class="muted-copy attendance-schedule-message">
+              {{ 'Hari libur — tidak ada jadwal presensi.' if state.schedule and state.schedule.is_holiday else 'Tidak ada jadwal untuk hari ini.' }}
+            </p>
+            <dl class="profile-details" id="attendance-schedule-times" hidden>
+              <div><dt>Mulai masuk</dt><dd data-schedule-time="checkin_start">—</dd></div>
+              <div><dt>Terlambat</dt><dd data-schedule-time="late_after">—</dd></div>
+              <div><dt>Batas masuk</dt><dd data-schedule-time="checkin_cutoff">—</dd></div>
+              <div><dt>Mulai pulang</dt><dd data-schedule-time="checkout_start">—</dd></div>
+            </dl>
+          {% endif %}
+          {% if state.schedule and not state.schedule.is_holiday %}
+            <p id="attendance-schedule-message" class="muted-copy attendance-schedule-message" hidden></p>
+          {% endif %}
+        </article>
+      </section>
+      <p class="attendance-history-link"><a class="ghost-button" href="{{ url_for('student.attendance_history') }}">Lihat kalender presensi</a></p>
+    {% endif %}
+  </main>
+  {{ bottom_nav('student', 'dashboard') }}
+</div>
+{% endblock %}

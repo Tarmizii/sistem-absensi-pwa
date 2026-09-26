@@ -1,5 +1,5 @@
-{% macro icon(name) -%}
-  <span class="nav-icon" aria-hidden="true">
+{% macro icon(name, weight='regular') -%}
+  <span class="nav-icon{{ ' nav-icon-bold' if weight == 'bold' else '' }}" aria-hidden="true">
     <svg viewBox="0 0 24 24" role="presentation">
       {% if name == 'house' %}
         <path d="m3 10 9-7 9 7"></path><path d="M5 9v11h14V9"></path><path d="M9 20v-6h6v6"></path>
@@ -27,6 +27,8 @@
         <circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path>
       {% elif name == 'arrow-left' %}
         <path d="M19 12H5M11 6l-6 6 6 6"></path>
+      {% elif name == 'arrow-right' %}
+        <path d="M5 12h14M13 6l6 6-6 6"></path>
       {% elif name == 'check' %}
         <path d="m5 12 4 4L19 6"></path>
       {% elif name == 'pencil' %}

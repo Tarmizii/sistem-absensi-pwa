@@ -1,0 +1,44 @@
+{
+  "generator": "Built-in imagegen",
+  "styleReference": "school-day-v2.png",
+  "assets": [
+    {
+      "name": "school-day-v2",
+      "prompt": "Create one original production UI illustration asset school-day-v2 for an Indonesian school attendance application, not a UI mockup. Flat editorial 2D illustration, crisp organic shapes, refined friendly proportions, minimal ink details; cream #FFF5E3, coral #ED896F, mint #7CD3AA, warm yellow #F2C879 and dark ink #303044. A smiling Indonesian high-school student with short black hair, white school shirt and gray trousers, coral backpack, holding a schoolbook, preparing to go to school. Small abstract mint/coral shapes and a simple sun complement the figure. Warm, sophisticated educational editorial art, readable at small scale. Centered complete figure, balanced landscape 5:4 composition with generous transparent margins, no cropping, no text, letters, logos or watermark, no glossy 3D, no photorealism. Actual transparent background, not a drawn checkerboard. Reference style: warm pastel mobile education editorial illustration."
+    },
+    {
+      "name": "welcome-v2",
+      "prompt": "Create welcome-v2: one original flat editorial 2D illustration for the public welcome page of an Indonesian school attendance app. Use the attached illustration only as a style, palette and character-family reference, not as a scene to duplicate. A smiling Indonesian high-school girl in white hijab and white/gray school uniform holding mint and coral books, standing beside a small simplified school building. Clean flat shapes, limited gentle shading, warm cream #FFF5E3 coral #ED896F mint #7CD3AA yellow #F2C879 ink #303044. Landscape composition around 18:11, balanced full subject and generous clear margins. Actual transparent background. No text, letters, numbers, logos, watermark, UI frame, photographic or glossy 3D effects. Readable at thumbnail size."
+    },
+    {
+      "name": "teacher-welcome-v2",
+      "prompt": "Create teacher-welcome-v2, one standalone original illustration. Match the attached character-family reference's crisp friendly editorial 2D drawing and warm pastel palette (cream #FFF5E3 coral #ED896F mint #7CD3AA warm yellow #F2C879 ink #303044), limited shading. Indonesian adult woman teacher wearing a mint hijab and simple cream blouse, holding a coral class journal close to her chest with both hands; warm composed smile. Waist-up compact silhouette with two small abstract leaves, no busy scenery. Landscape 18:11 canvas with generous clear margins, readable even at 64px. Actual transparent background. No writing, letters, logos, watermark, realistic rendering, glossy 3D or UI. Complete uncropped figure silhouette. Subject is an adult teacher, not a student."
+    },
+    {
+      "name": "admin-welcome-v2",
+      "prompt": "Create admin-welcome-v2, one original standalone editorial 2D illustration for an Indonesian school attendance administrator dashboard. Match attached reference character style and warm pastel family: cream #FFF5E3, coral #ED896F, mint #7CD3AA, warm yellow #F2C879, ink #303044. Adult Indonesian male school office administrator, short neat dark hair, wearing a mint collared shirt, seated at a simple coral/cream desk working on a laptop beside two journals and a small plant. Calm competent expression, simplified crisp flat shapes and minimal gentle shading. Compact landscape 5:4 composition with complete desk and subject, transparent margins. Actual transparent background. No text, numbers, charts with labels, logos or watermark; no glossy 3D, no photorealism. Intended display about 200px, avoid tiny detail."
+    },
+    {
+      "name": "attendance-v2",
+      "prompt": "Create attendance-v2, one original standalone flat editorial 2D illustration for school attendance CTA card. Match reference's Indonesian teenage boy identity, black hair and white school shirt, warm cream/coral/mint/yellow/ink palette and friendly crisp shapes with minimal shading. Waist-up student holding a coral smartphone at chest level and looking at it, other hand naturally relaxed. A simple mint circular decorative shape behind him, no checkmark (attendance is not yet confirmed). Compact clear composition on transparent background with generous margins, landscape 18:11; must remain recognizable at 96px. No text, letters, digits, logo, watermark, UI screen, glossy 3D, photographic effects. Complete head and hands."
+    },
+    {
+      "name": "enrollment-v2",
+      "prompt": "Create enrollment-v2, one standalone original flat editorial 2D school illustration. Use attached reference's Indonesian teenage boy character, black hair, white school shirt, cream coral mint yellow ink palette, friendly simplified shapes and gentle minimal shading. Show one centered head-and-shoulders student facing forward with two simple curved directional arrows flanking the face, suggesting turn left and right; small coral rounded corner framing marks. No checkmark or success signal. Clear simple explanatory silhouette, actual transparent background, landscape 18:11 with generous margins, readable at 128px. No text letters numbers watermark logo, no UI mockup, no photorealism or glossy 3D. Only one face."
+    },
+    {
+      "name": "success-v2",
+      "prompt": "Create success-v2, one original standalone flat editorial 2D illustration matching attached reference's Indonesian teenage boy character (black hair, white school shirt) and cream coral mint warm yellow dark ink colors. Smiling head-and-shoulders student with ONE large mint circle containing a dark green checkmark beside his shoulder, two small coral/yellow celebratory shapes. Calm positive confirmation, simple shapes and limited gentle shading, not exuberant confetti. Transparent background with landscape 18:11 composition and generous clear margins. Readable at 128px. No text letters digits logos watermark, no glossy 3D or photorealism. Whole head fully visible, no clipped decoration."
+    },
+    {
+      "name": "location-v2",
+      "status": "pending_generation_quota",
+      "prompt": "Create location-v2, one original standalone flat editorial 2D illustration matching attached Indonesian teenage boy reference, white school shirt, black hair, friendly cream coral mint yellow dark ink palette, crisp shapes with minimal soft shading. Student holding a coral smartphone, looking thoughtfully at it, beside one large simple coral map location pin over a tiny folded mint/cream map. Helpful calm expression, no panic, no success checkmark. Waist-up compact landscape 18:11 composition, whole head and hands, clear transparent margins and actual transparent background. Readable at 128px. No text numbers letters logos watermark, no UI screen, no glossy 3D, no photorealism."
+    },
+    {
+      "name": "empty-v2",
+      "status": "pending_generation_quota",
+      "prompt": "Original flat editorial 2D empty school journal with a pencil and two simple mint/coral leaves, cream coral mint warm yellow ink palette matching school-day-v2, landscape transparent background, generous margins, no text, logos, watermark or 3D; readable at 128px."
+    }
+  ]
+}

@@ -18,10 +18,10 @@
           <a class="profile-chip" href="{{ url_for('role.student_profile') }}"><span class="avatar">{{ username[:1]|upper }}</span>Siswa</a>
         </header>
         <section class="bento-grid" aria-label="Ringkasan siswa">
-          <article class="panel panel-span-12 panel-purple">
-            <p class="eyebrow" style="color: var(--color-lime);">Presensi hari ini</p>
+          <article class="panel panel-span-12 panel-coral">
+            <p class="eyebrow" style="color: var(--color-ink);">Presensi hari ini</p>
             <h2 class="panel-title" style="margin-top: .7rem;">Belum ada presensi</h2>
-            <p style="margin: .6rem 0 0; color: rgb(255 255 255 / 78%); line-height: 1.55;">Fitur kamera dan lokasi akan muncul setelah modul presensi siap.</p>
+            <p style="margin: .6rem 0 0; color: var(--color-ink); line-height: 1.55;">Fitur kamera dan lokasi akan muncul setelah modul presensi siap.</p>
             <button class="primary-button" type="button" disabled aria-disabled="true" style="margin-top: 1.2rem; color: var(--color-ink); background: var(--color-lime);">{{ icon('sparkle') }}Presensi segera tersedia</button>
           </article>
           <article class="panel panel-span-8">
@@ -29,7 +29,7 @@
             <p class="panel-value">—</p>
             <p class="muted-copy" style="margin: .5rem 0 0;">Riwayat akan terisi setelah presensi pertama.</p>
           </article>
-          <article class="panel panel-span-4 panel-lime">
+          <article class="panel panel-span-4 panel-mint">
             <p class="panel-title">Akun</p>
             <p class="muted-copy" style="color: var(--color-ink); margin: .55rem 0 0;">Profil dan perubahan password tersedia dari menu berikutnya.</p>
             <span class="status-badge status-info" style="margin-top: 1rem;">Aktif</span>
@@ -52,7 +52,7 @@
             <a class="profile-chip" href="{{ url_for('role.teacher_profile') }}"><span class="avatar">{{ username[:1]|upper }}</span>Guru</a>
           </header>
           <section class="bento-grid" aria-label="Ringkasan Guru">
-            <article class="panel panel-span-8 panel-lime">
+            <article class="panel panel-span-8 panel-mint">
               <p class="eyebrow" style="color: var(--color-ink);">Ringkasan kelas</p>
               <h2 class="panel-title" style="margin-top: .7rem;">Data kelas belum tersedia</h2>
               <p class="muted-copy" style="color: var(--color-ink); margin: .6rem 0 0;">Master kelas dan daftar siswa akan ditambahkan pada fase berikutnya.</p>
@@ -83,33 +83,29 @@
           <div>
             <p class="eyebrow">Pusat kendali sekolah</p>
             <h1 class="display-title">Selamat datang, {{ username }}.</h1>
-            <p class="muted-copy">Bangun presensi sekolah dari satu ruang kerja.</p>
+            <p class="muted-copy">Semua kebutuhan presensi sekolah, dalam satu ruang.</p>
           </div>
           <a class="profile-chip" href="{{ url_for('role.admin_profile') }}"><span class="avatar">{{ username[:1]|upper }}</span>Admin</a>
         </header>
-        <section class="bento-grid" aria-label="Ringkasan Admin">
-          <article class="panel panel-span-8 panel-purple">
-            <p class="eyebrow" style="color: var(--color-lime);">Status sistem</p>
-            <h2 class="panel-title" style="margin-top: .7rem;">Fondasi siap dikembangkan</h2>
-            <p style="margin: .6rem 0 0; color: rgb(255 255 255 / 78%); line-height: 1.55;">Akun, role guard, dan struktur navigasi sudah tersedia. Master data menjadi langkah berikutnya.</p>
-            <div class="status-row">
-              <span class="status-badge" style="color: var(--color-ink); background: var(--color-lime);">Autentikasi aktif</span>
-              <span class="status-badge" style="color: #fff; background: rgb(255 255 255 / 14%);">Mode pengembangan</span>
+        <div class="admin-overview-grid">
+          <section class="panel panel-coral admin-welcome" aria-labelledby="admin-welcome-title">
+            <div class="welcome-copy"><p class="eyebrow">Setiap kehadiran berarti</p>
+              <h2 id="admin-welcome-title" class="display-title">Hari yang baik,<br>dimulai dari sini.</h2>
+              <p class="muted-copy">Pantau kehadiran, tinjau catatan siswa, dan unduh laporan harian sekolah.</p>
+              <a class="primary-button" href="{{ url_for('admin.attendance') }}">Buka monitoring presensi {{ icon('arrow-right') }}</a>
             </div>
-          </article>
-          <article class="panel panel-span-4 panel-lime">
-            <p class="panel-title">Data sekolah</p>
-            <p class="panel-value">—</p>
-            <p class="muted-copy" style="color: var(--color-ink); margin: .5rem 0 0;">Belum ada siswa atau kelas yang dimuat.</p>
-          </article>
-          <article class="panel panel-span-12">
-            <p class="panel-title">Modul berikutnya</p>
-            <div class="status-row">
-              <span class="status-badge status-info">Master data</span>
-              <span class="status-badge status-info">Jadwal & geofence</span>
-              <span class="status-badge status-info">Enrollment wajah</span>
-            </div>
-          </article>
+            <img class="welcome-art" src="{{ url_for('static', filename='illustrations/admin-welcome-v2.webp') }}" width="1402" height="1122" alt="">
+          </section>
+          <section class="panel admin-insight-card" aria-labelledby="admin-insight-title"><span class="feature-icon">{{ icon('chart') }}</span><p class="eyebrow">Kenali pola kehadiran</p><h2 id="admin-insight-title" class="panel-title">Dari catatan<br>menjadi wawasan.</h2><p class="muted-copy">Jalankan analisis untuk periode yang telah selesai atau buka hasil sebelumnya.</p><a class="ghost-button" href="{{ url_for('admin.analytics') }}">Buka analitik {{ icon('arrow-right') }}</a></section>
+        </div>
+        <div class="section-heading dashboard-section-heading"><div><p class="eyebrow">Kelola sekolah</p><h2 class="panel-title">Area kerja Anda</h2></div><span class="section-caption">Data, jadwal, dan administrasi</span></div>
+        <section class="admin-destination-grid" aria-label="Area kerja Admin">
+          <a class="panel admin-destination" href="{{ url_for('admin.student_list') }}">{{ icon('users') }}<span><strong>Data Siswa</strong><small>Profil, penempatan, dan status akun</small></span><span aria-hidden="true">↗</span></a>
+          <a class="panel admin-destination" href="{{ url_for('admin.teacher_list') }}">{{ icon('user') }}<span><strong>Data Guru</strong><small>Akun dan penugasan wali kelas</small></span><span aria-hidden="true">↗</span></a>
+          <a class="panel admin-destination" href="{{ url_for('admin.class_list') }}">{{ icon('clipboard') }}<span><strong>Kelas & tahun ajaran</strong><small>Penempatan Siswa dan Wali Kelas</small></span><span aria-hidden="true">↗</span></a>
+          <a class="panel admin-destination" href="{{ url_for('admin.schedule_list') }}">{{ icon('calendar') }}<span><strong>Jadwal presensi</strong><small>Atur waktu serta pengecualian kalender</small></span><span aria-hidden="true">↗</span></a>
+          <a class="panel admin-destination" href="{{ url_for('admin.geofence_settings') }}">{{ icon('gear') }}<span><strong>Pengaturan lokasi</strong><small>Kelola area presensi sekolah</small></span><span aria-hidden="true">↗</span></a>
+          <a class="panel admin-destination" href="{{ url_for('admin.audit_logs') }}">{{ icon('shield') }}<span><strong>Audit aktivitas</strong><small>Telusuri perubahan yang tercatat</small></span><span aria-hidden="true">↗</span></a>
         </section>
       </main>
     </div>

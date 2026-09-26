@@ -23,6 +23,10 @@
           <div class="field"><label for="name">Nama lokasi</label><input id="name" name="name" value="{{ values.name }}" maxlength="100" required></div>
           <div class="field"><label for="latitude">Latitude</label><input id="latitude" name="latitude" type="number" step="any" min="-90" max="90" value="{{ values.latitude }}" inputmode="decimal"><small class="muted-copy">Rentang -90 sampai 90. Masukkan koordinat yang sudah diverifikasi sekolah.</small></div>
           <div class="field"><label for="longitude">Longitude</label><input id="longitude" name="longitude" type="number" step="any" min="-180" max="180" value="{{ values.longitude }}" inputmode="decimal"><small class="muted-copy">Rentang -180 sampai 180.</small></div>
+          <div class="field">
+            <button class="ghost-button" id="geofence-use-current" type="button" aria-describedby="geofence-fill-feedback">Gunakan lokasi perangkat ini</button>
+            <small class="muted-copy" id="geofence-fill-feedback" role="status" aria-live="polite">Atau tekan tombol untuk mengisi latitude/longitude dari GPS perangkat ini, lalu simpan.</small>
+          </div>
           <div class="field"><label for="radius_meters">Radius geofence (meter)</label><input id="radius_meters" name="radius_meters" type="number" min="1" step="1" value="{{ values.radius_meters or '75' }}" required><small class="muted-copy">Nilai awal 75 meter sesuai PRD.</small></div>
           <div class="field"><label for="max_accuracy_meters">Batas accuracy GPS (meter)</label><input id="max_accuracy_meters" name="max_accuracy_meters" type="number" min="0.01" step="0.01" value="{{ values.max_accuracy_meters }}" inputmode="decimal"><small class="muted-copy">Belum ada nilai kebijakan dari sekolah. Geofence aktif memerlukan nilai yang disepakati; jangan menebaknya.</small></div>
           <label class="checkbox-field"><input type="checkbox" name="is_active" {{ 'checked' if values.is_active == 'on' else '' }}> Aktifkan geofence</label>

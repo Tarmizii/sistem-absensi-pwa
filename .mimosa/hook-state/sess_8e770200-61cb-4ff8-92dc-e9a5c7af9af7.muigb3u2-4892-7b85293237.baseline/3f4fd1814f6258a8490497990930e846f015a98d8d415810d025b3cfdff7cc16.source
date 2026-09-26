@@ -1,0 +1,59 @@
+"""Loopback-only synthetic visual preview. Never mounted in the product app."""
+from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from flask import Flask, g, render_template, send_from_directory, request, flash
+from app import create_app
+import calendar
+
+root = Path(__file__).resolve().parents[1]
+product = create_app({'TESTING': True, 'SECRET_KEY': 'synthetic-visual-only'})
+product.jinja_env.auto_reload = True
+preview = Flask(__name__, static_folder=str(root / 'app/static'), static_url_path='/static')
+student_state = dict(full_name='Aulia Putri', class_name='XI IPA 1', today='2026-09-26', server_time='07:05', state='checkin', cta_label='Presensi Masuk', cta_enabled=True, status_today='Belum Absen', reason=None, status_source_label=None, checkin_time=None, checkout_time=None, predicted_status='Hadir', schedule=dict(checkin_start='06:30',late_after='07:15',checkin_cutoff='08:00',checkout_start='15:00',is_holiday=False))
+cls = dict(class_id=91, class_name='XI IPA 1', academic_year_name='2026/2027', class_active=True, academic_year_active=True)
+model = dict(classes=[cls], selected_class=cls, class_is_current=True, today='2026-09-26',server_time='07:05', summary=dict(total=32,present=24,late=2,permit=1,sick=1,absent=0,pending=4), review_count=2, review_students=[dict(student_id=91,full_name='Siswa Contoh Satu',nisn='0000000091',reason='Belum masuk setelah cutoff'),dict(student_id=92,full_name='Siswa Contoh Dua dengan Nama Panjang',nisn='0000000092',reason='Belum pulang setelah jadwal pulang')])
+students = [dict(student_id=i,full_name=n,nisn=f'{i:010}',face_registered=i%3!=0,is_active=i%5!=0) for i,n in enumerate(['Aulia Putri','Muhammad Rizky','Cut Nur Aisyah','Ahmad Fauzan','Siswa Contoh dengan Nama yang Sangat Panjang'],91)]
+days = {day: dict(date=f'2026-09-{day:02}', day=day, status='Hadir' if day < 26 else 'Belum Absen' if day==26 else 'Belum berlangsung',status_key='present' if day<26 else 'pending' if day==26 else 'upcoming',is_future=day>26,checkin_time='07:05' if day<26 else None,checkout_time='15:03' if day<26 else None,notes=None) for day in range(1,31)}
+history = dict(full_name='Aulia Putri',month='2026-09',month_label='September 2026',selected_date='2026-09-26',weeks=[[days.get(day) for day in week] for week in calendar.monthcalendar(2026,9)],detail=days[26])
+@preview.get('/<path:name>')
+def page(name):
+    pages = {
+        'admin': ('auth/role_dashboard.html', dict(role='admin',role_label='Admin',username='Admin Sekolah')),
+        'students': ('admin/student_list.html', dict(students=students,search='')),
+        'student': ('student/dashboard.html', dict(state=student_state,username='Aulia',database_unavailable=False,not_found=False)),
+        'teacher': ('teacher/dashboard.html',dict(model=model,username='Ibu Ratna')),
+        'login': ('auth/login.html',{}),
+        'public': ('home.html',{}),
+        'enrollment': ('student/enrollment.html', dict(database_unavailable=False, progress=dict(full_name='Siswa Sintetis', saved_count=0, total_poses=3, face_registered=False, poses=[dict(key=k, label=l, saved=False) for k,l in [('front','Depan'),('left','Kiri'),('right','Kanan')]]))),
+        'history': ('student/history.html',dict(history=history,error=None)),
+        'roster': ('teacher/students.html',dict(model={**model,'q':'','rows':students,'total':5,'page':1,'pages':1})),
+        'empty': ('teacher/dashboard.html',dict(model={**model,'classes':[]},username='Guru Contoh')),
+        'error': ('student/dashboard.html',dict(state=None,username='Aulia',database_unavailable=True,not_found=False)),
+        'profile': ('auth/profile.html',dict(role='student',role_label='Siswa',username='0000000091',is_active=True,must_change_password=False,student_profile=dict(full_name='Aulia Putri',nisn='0000000091',class_name='XI IPA 1',academic_year_name='2026/2027'),profile_error=None)),
+    }
+    if name not in pages: return 'Synthetic preview: read-only',404
+    template, data = pages[name]
+    scenario = request.args.get('scenario')
+    with product.test_request_context('/'):
+        g.current_user = {'role': data.get('role','student'), 'username':'Preview'}
+        if name == 'login':
+            messages = {'invalid': ('error', 'Username atau password salah.'), 'limited': ('error', 'Terlalu banyak percobaan login. Coba lagi nanti.'), 'database': ('error', 'Layanan login belum tersedia. Coba lagi setelah database siap.'), 'logout': ('success', 'Anda sudah logout.')}
+            if scenario in messages:
+                category, message = messages[scenario]
+                flash(message, category)
+        html=render_template(template,**data)
+    # The static preview cannot execute camera, auth, or attendance operations.
+    import re
+    html=re.sub(r'<script[^>]+(?:attendance-checkin|attendance-state|pwa-register)\.js[^>]*></script>','',html)
+    if request.args.get('textscale') == '200':
+        html=html.replace('</head>', '<style>html { font-size: 200%; }</style></head>')
+    if name == 'login' and scenario in ('offline', 'online'):
+        html=html.replace('aria-atomic="true" hidden', 'aria-atomic="true"')
+        html=html.replace('<span id="network-status-message"></span>', '<span id="network-status-message">' + ('Anda sedang offline. Presensi dan data terbaru memerlukan koneksi internet.' if scenario == 'offline' else 'Koneksi kembali. Muat ulang untuk memperbarui data.') + '</span>')
+        if scenario == 'online':
+            html=html.replace('id="network-reload" type="button" hidden', 'id="network-reload" type="button"')
+    if name == 'student' and request.args.get('location') == 'help':
+        html=html.replace('id="attendance-location-help" hidden', 'id="attendance-location-help"')
+    return html,200,{'Cache-Control':'no-store'}
+if __name__=='__main__': preview.run(host='127.0.0.1',port=5090,debug=False)

@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS students (
     nisn VARCHAR(20) NOT NULL,
     full_name VARCHAR(150) NOT NULL,
     face_registered BOOLEAN NOT NULL DEFAULT FALSE,
+    model_path VARCHAR(255) NULL DEFAULT NULL,
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
         ON UPDATE CURRENT_TIMESTAMP(6),
@@ -84,6 +85,20 @@ CREATE TABLE IF NOT EXISTS student_faces (
     UNIQUE KEY uq_student_faces_storage_key (storage_key),
     CONSTRAINT fk_student_faces_student FOREIGN KEY (student_id)
         REFERENCES students (id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS face_enrollment_challenges (
+    challenge_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    session_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    pose ENUM('front', 'left', 'right') NOT NULL,
+    stage ENUM('await_open', 'await_closed', 'await_reopen') NOT NULL DEFAULT 'await_open',
+    expires_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (challenge_hash),
+    KEY idx_face_challenge_user_expiry (user_id, expires_at),
+    CONSTRAINT fk_face_challenge_user FOREIGN KEY (user_id)
+        REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS academic_years (
@@ -224,5 +239,172 @@ CREATE TABLE IF NOT EXISTS school_geofences (
     CONSTRAINT chk_school_geofences_active_config CHECK (
         is_active = FALSE OR
         (latitude IS NOT NULL AND longitude IS NOT NULL AND max_accuracy_meters IS NOT NULL)
+    )
+) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS attendance_records (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    student_id BIGINT UNSIGNED NOT NULL,
+    class_id BIGINT UNSIGNED NULL COMMENT 'Historical snapshot; unchanged when the student moves class.',
+    attendance_date DATE NOT NULL,
+    status ENUM('present', 'late', 'permit', 'sick', 'absent') NULL
+        COMMENT 'NULL until check-in or a manual status is recorded.',
+    status_source ENUM('system', 'teacher', 'finalization_job') NULL,
+    notes VARCHAR(500) NULL,
+
+    checkin_at DATETIME(6) NULL,
+    checkin_latitude DECIMAL(10,7) NULL,
+    checkin_longitude DECIMAL(10,7) NULL,
+    checkin_accuracy DECIMAL(8,2) NULL,
+    checkin_photo VARCHAR(255) NULL,
+    checkin_face_score DECIMAL(10,4) NULL,
+    checkin_liveness_verified BOOLEAN NOT NULL DEFAULT FALSE,
+
+    checkout_at DATETIME(6) NULL,
+    checkout_latitude DECIMAL(10,7) NULL,
+    checkout_longitude DECIMAL(10,7) NULL,
+    checkout_accuracy DECIMAL(8,2) NULL,
+    checkout_photo VARCHAR(255) NULL,
+    checkout_face_score DECIMAL(10,4) NULL,
+    checkout_liveness_verified BOOLEAN NOT NULL DEFAULT FALSE,
+
+    created_by BIGINT UNSIGNED NULL,
+    updated_by BIGINT UNSIGNED NULL,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
+        ON UPDATE CURRENT_TIMESTAMP(6),
+
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_attendance_student_date (student_id, attendance_date),
+    KEY idx_attendance_date_status (attendance_date, status),
+    KEY idx_attendance_date_class (attendance_date, class_id),
+
+    CONSTRAINT fk_attendance_student FOREIGN KEY (student_id)
+        REFERENCES students (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_attendance_class FOREIGN KEY (class_id)
+        REFERENCES classes (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_attendance_created_by FOREIGN KEY (created_by)
+        REFERENCES users (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_attendance_updated_by FOREIGN KEY (updated_by)
+        REFERENCES users (id) ON DELETE RESTRICT,
+
+    CONSTRAINT chk_attendance_checkin_coords CHECK (
+        (checkin_latitude IS NULL AND checkin_longitude IS NULL)
+        OR (checkin_latitude BETWEEN -90 AND 90 AND checkin_longitude BETWEEN -180 AND 180)
+    ),
+    CONSTRAINT chk_attendance_checkout_coords CHECK (
+        (checkout_latitude IS NULL AND checkout_longitude IS NULL)
+        OR (checkout_latitude BETWEEN -90 AND 90 AND checkout_longitude BETWEEN -180 AND 180)
+    ),
+    CONSTRAINT chk_attendance_checkin_accuracy CHECK (
+        checkin_accuracy IS NULL OR checkin_accuracy >= 0
+    ),
+    CONSTRAINT chk_attendance_checkout_accuracy CHECK (
+        checkout_accuracy IS NULL OR checkout_accuracy >= 0
+    ),
+    CONSTRAINT chk_attendance_source_checkin CHECK (
+        checkin_at IS NULL OR status_source IS NULL OR status_source <> 'finalization_job'
+    ),
+    CONSTRAINT chk_attendance_checkout_requires_checkin CHECK (
+        checkout_at IS NULL OR checkin_at IS NOT NULL
+    )
+) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS attendance_day_snapshots (
+    academic_year_id BIGINT UNSIGNED NOT NULL,
+    class_id BIGINT UNSIGNED NOT NULL,
+    attendance_date DATE NOT NULL,
+    requires_attendance BOOLEAN NOT NULL,
+    source ENUM(
+        'attendance_transaction', 'manual_status', 'finalization_job', 'reconstructed'
+    ) NOT NULL,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (class_id, attendance_date),
+    KEY idx_attendance_day_snapshots_year_date (academic_year_id, attendance_date, class_id),
+    CONSTRAINT fk_attendance_day_snapshots_year FOREIGN KEY (academic_year_id)
+        REFERENCES academic_years (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_attendance_day_snapshots_class FOREIGN KEY (class_id)
+        REFERENCES classes (id) ON DELETE RESTRICT,
+    CONSTRAINT chk_attendance_day_snapshot_requires_attendance CHECK (
+        requires_attendance IN (0, 1)
+    )
+) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS kmeans_runs (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    academic_year_id BIGINT UNSIGNED NOT NULL,
+    period_start DATE NOT NULL,
+    period_end DATE NOT NULL,
+    created_by BIGINT UNSIGNED NOT NULL,
+    submission_key_hash CHAR(64) NULL,
+    formula_version VARCHAR(40) NOT NULL,
+    label_rule_version VARCHAR(180) NOT NULL,
+    random_state INT UNSIGNED NOT NULL,
+    n_init SMALLINT UNSIGNED NOT NULL,
+    cluster_count TINYINT UNSIGNED NOT NULL DEFAULT 3,
+    eligible_students INT UNSIGNED NOT NULL,
+    ineligible_students INT UNSIGNED NOT NULL,
+    reconstructed_snapshot_dates INT UNSIGNED NOT NULL DEFAULT 0,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (id),
+    KEY idx_kmeans_runs_year_period (academic_year_id, period_start, period_end, id),
+    KEY idx_kmeans_runs_created (created_at, id),
+    UNIQUE KEY uq_kmeans_runs_submission_key (submission_key_hash),
+    CONSTRAINT fk_kmeans_runs_year FOREIGN KEY (academic_year_id)
+        REFERENCES academic_years (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_kmeans_runs_creator FOREIGN KEY (created_by)
+        REFERENCES users (id) ON DELETE RESTRICT,
+    CONSTRAINT chk_kmeans_runs_period CHECK (period_end >= period_start),
+    CONSTRAINT chk_kmeans_runs_three_clusters CHECK (cluster_count = 3)
+) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS kmeans_results (
+    run_id BIGINT UNSIGNED NOT NULL,
+    student_id BIGINT UNSIGNED NOT NULL,
+    class_id BIGINT UNSIGNED NOT NULL,
+    attendance_percentage DECIMAL(7,4) NULL,
+    late_count INT UNSIGNED NOT NULL,
+    alpha_count INT UNSIGNED NOT NULL,
+    scheduled_school_days INT UNSIGNED NOT NULL,
+    effective_days INT NOT NULL,
+    is_eligible BOOLEAN NOT NULL,
+    ineligible_reason VARCHAR(64) NULL,
+    reconstructed_days INT UNSIGNED NOT NULL DEFAULT 0,
+    cluster_no TINYINT UNSIGNED NULL,
+    cluster_label ENUM('tinggi','sedang','rendah') NULL,
+    PRIMARY KEY (run_id, student_id),
+    KEY idx_kmeans_results_cluster (run_id, cluster_no, class_id, student_id),
+    CONSTRAINT fk_kmeans_results_run FOREIGN KEY (run_id)
+        REFERENCES kmeans_runs (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_kmeans_results_student FOREIGN KEY (student_id)
+        REFERENCES students (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_kmeans_results_class FOREIGN KEY (class_id)
+        REFERENCES classes (id) ON DELETE RESTRICT,
+    CONSTRAINT chk_kmeans_result_assignment CHECK (
+        (is_eligible = 1 AND attendance_percentage IS NOT NULL
+            AND cluster_no BETWEEN 1 AND 3 AND cluster_label IS NOT NULL
+            AND ineligible_reason IS NULL)
+        OR (is_eligible = 0 AND attendance_percentage IS NULL
+            AND cluster_no IS NULL AND cluster_label IS NULL
+            AND ineligible_reason IS NOT NULL)
+    )
+) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS kmeans_centroids (
+    run_id BIGINT UNSIGNED NOT NULL,
+    cluster_no TINYINT UNSIGNED NOT NULL,
+    cluster_label ENUM('tinggi','sedang','rendah') NOT NULL,
+    attendance_percentage DECIMAL(7,4) NOT NULL,
+    late_count DECIMAL(9,4) NOT NULL,
+    alpha_count DECIMAL(9,4) NOT NULL,
+    student_count INT UNSIGNED NOT NULL,
+    PRIMARY KEY (run_id, cluster_no),
+    UNIQUE KEY uq_kmeans_centroid_label (run_id, cluster_label),
+    CONSTRAINT fk_kmeans_centroids_run FOREIGN KEY (run_id)
+        REFERENCES kmeans_runs (id) ON DELETE RESTRICT,
+    CONSTRAINT chk_kmeans_centroid_rank CHECK (
+        (cluster_no = 1 AND cluster_label = 'tinggi')
+        OR (cluster_no = 2 AND cluster_label = 'sedang')
+        OR (cluster_no = 3 AND cluster_label = 'rendah')
     )
 ) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

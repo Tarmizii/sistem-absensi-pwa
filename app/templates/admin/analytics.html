@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% from 'components/navigation.html' import admin_sidebar with context %}
+{% block title %}Analitik — Sistem Presensi{% endblock %}
+{% block body_class %}admin-page{% endblock %}
+{% block body %}
+<div class="app-shell admin-shell">
+  {{ admin_sidebar('analytics') }}
+  <main class="main-content" aria-labelledby="admin-analytics-title">
+    <div class="desktop-only-notice" role="note">Admin dirancang untuk layar desktop dengan lebar minimal 1024px.</div>
+    <header class="content-header"><div><p class="eyebrow">Analisis historis</p><h1 id="admin-analytics-title" class="display-title">Analisis K-Means.</h1><p class="muted-copy">Jalankan analisis untuk satu periode tahun ajaran yang sudah berakhir. Hasil tersimpan sebagai histori dan tidak berubah setelah dibuat.</p></div></header>
+    {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-stack" aria-live="polite">{% for category, message in messages %}<p class="flash flash-{{ category }}" role="alert">{{ message }}</p>{% endfor %}</div>{% endif %}{% endwith %}
+
+    <section class="panel kmeans-form-panel" aria-labelledby="kmeans-form-title">
+      <div><p class="eyebrow">Run baru</p><h2 id="kmeans-form-title" class="panel-title">Pilih periode analisis</h2><p class="muted-copy">Hari presensi yang belum final akan ditolak. Minimal tiga siswa layak dan tiga pola fitur berbeda diperlukan.</p></div>
+      {% if database_unavailable %}
+        <p class="flash flash-error" role="alert">Database belum dapat dimuat. Muat ulang halaman untuk mencoba kembali.</p>
+      {% elif not years %}
+        <div class="empty-state"><h3 class="panel-title">Belum ada tahun ajaran yang dapat dianalisis</h3><p class="muted-copy">Pilihannya muncul setelah tahun ajaran berakhir.</p></div>
+      {% else %}
+        <form method="post" action="{{ url_for('admin.analytics') }}" class="kmeans-form" data-once-submit novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="submission_nonce" value="{{ session.get('kmeans_submission_nonce', '') }}">
+          <div class="field"><label for="kmeans-year">Tahun ajaran</label><select id="kmeans-year" name="academic_year_id" required>{% for year in years %}<option value="{{ year.id }}" {% if values.year_id == year.id|string %}selected{% endif %}>{{ year.name }} · {{ year.start_date }}—{{ year.end_date }}</option>{% endfor %}</select></div>
+          <div class="field"><label for="kmeans-start">Tanggal mulai</label><input id="kmeans-start" type="date" name="start_date" value="{{ values.start }}" required></div>
+          <div class="field"><label for="kmeans-end">Tanggal akhir</label><input id="kmeans-end" type="date" name="end_date" value="{{ values.end }}" required></div>
+          <button class="primary-button" type="submit">Jalankan analisis sekali</button>
+        </form>
+      {% endif %}
+    </section>
+
+    <section class="panel teacher-table-panel" aria-labelledby="kmeans-history-title">
+      <div class="teacher-section-heading"><div><p class="eyebrow">Hasil yang tersimpan</p><h2 class="panel-title" id="kmeans-history-title">Histori analisis</h2></div>{% if history %}<p class="muted-copy">{{ history.total }} run</p>{% endif %}</div>
+      {% if history and history.rows %}
+        <div class="table-wrap" tabindex="0" aria-label="Histori analisis K-Means, dapat digulir mendatar"><table class="data-table"><caption class="sr-only">Histori analisis K-Means</caption><thead><tr><th scope="col">Tahun ajaran</th><th scope="col">Periode</th><th scope="col">Siswa layak</th><th scope="col">Tidak layak</th><th scope="col">Snapshot rekonstruksi</th><th scope="col">Dibuat oleh</th><th scope="col">Hasil</th></tr></thead><tbody>
+          {% for row in history.rows %}<tr><td>{{ row.academic_year_name }}</td><td>{{ row.period_start }}—{{ row.period_end }}</td><td>{{ row.eligible_students }}</td><td>{{ row.ineligible_students }}</td><td>{{ row.reconstructed_snapshot_dates }}</td><td>{{ row.created_by }}</td><td><a class="table-primary-link" href="{{ url_for('admin.analytics_run', run_id=row.id) }}">Buka run</a></td></tr>{% endfor %}
+        </tbody></table></div>
+        <nav class="teacher-pagination" aria-label="Halaman histori analisis"><p class="muted-copy">Halaman {{ history.page }} dari {{ history.pages }} · {{ history.total }} run</p><div>{% if history.page > 1 %}<a class="ghost-button" href="{{ url_for('admin.analytics', page=history.page - 1) }}">Sebelumnya</a>{% else %}<span class="ghost-button" aria-disabled="true">Sebelumnya</span>{% endif %}{% if history.page < history.pages %}<a class="ghost-button" href="{{ url_for('admin.analytics', page=history.page + 1) }}">Berikutnya</a>{% else %}<span class="ghost-button" aria-disabled="true">Berikutnya</span>{% endif %}</div></nav>
+      {% elif history %}<div class="empty-state"><h3 class="panel-title">Belum ada histori analisis</h3><p class="muted-copy">Run yang berhasil akan tersimpan di sini.</p></div>{% endif %}
+    </section>
+  </main>
+</div>
+<script defer src="{{ url_for('static', filename='js/admin-kmeans.js') }}"></script>
+{% endblock %}

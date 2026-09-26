@@ -3,12 +3,23 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#F6F4EE">
+    <meta name="theme-color" content="{% block theme_color %}#FFF5E3{% endblock %}">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>{% block title %}Sistem Presensi{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
     {% block head %}{% endblock %}
   </head>
   <body class="{% block body_class %}{% endblock %}">
+    <div class="network-status" id="network-status" role="status" aria-live="polite" aria-atomic="true" hidden>
+      <span id="network-status-message"></span>
+      <button class="ghost-button" id="network-reload" type="button" hidden>Muat ulang</button>
+    </div>
     {% block body %}{% endblock %}
+    <script src="{{ url_for('static', filename='js/pwa-register.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/password-visibility.js') }}" defer></script>
   </body>
 </html>

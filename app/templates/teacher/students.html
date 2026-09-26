@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% from 'components/navigation.html' import teacher_sidebar, bottom_nav with context %}
+{% from 'components/teacher_class_control.html' import class_control %}
+{% block title %}Data Siswa Kelas — Sistem Presensi{% endblock %}
+{% block body_class %}teacher-page{% endblock %}
+{% block body %}
+<div class="teacher-shell"><div class="app-shell">
+  {{ teacher_sidebar('students') }}
+  <main class="main-content" aria-labelledby="teacher-students-title">
+    <header class="content-header"><div><p class="eyebrow">Roster kelas</p><h1 id="teacher-students-title" class="display-title">Data siswa</h1><p class="muted-copy">Cari siswa berdasarkan nama atau NISN. Akun nonaktif tetap tercantum pada roster kelas historis.</p></div><a class="profile-chip" href="{{ url_for('role.teacher_profile') }}">Profil Guru</a></header>
+    {% if not model.classes %}
+      <section class="panel empty-state illustrated-empty-state"><img class="empty-state-illustration" src="{{ url_for('static', filename='illustrations/empty.svg') }}" width="360" height="220" alt=""><h2 class="panel-title">Belum ada kelas tugas</h2><p class="muted-copy">Hubungi Admin sekolah untuk menetapkan kelas.</p></section>
+    {% else %}
+      {{ class_control(model.classes, model.selected_class, url_for('teacher.students'), 'Pilih kelas') }}
+      {% if model.selected_class %}
+        <form class="teacher-filter-form" method="get" action="{{ url_for('teacher.students') }}" novalidate>
+          <input type="hidden" name="class_id" value="{{ model.selected_class.class_id }}">
+          <div class="field teacher-search-field"><label for="teacher-student-search">Nama atau NISN</label><input id="teacher-student-search" name="q" type="text" maxlength="100" value="{{ model.q }}" autocomplete="off"></div>
+          <button class="primary-button" type="submit">Cari siswa</button>
+          {% if model.q %}<a class="ghost-button" aria-label="Hapus pencarian" href="{{ url_for('teacher.students', class_id=model.selected_class.class_id, page=1) }}">Hapus pencarian</a>{% endif %}
+        </form>
+        <section class="panel teacher-table-panel" aria-labelledby="teacher-roster-title">
+          <div class="teacher-section-heading"><div><p class="eyebrow">{{ model.selected_class.academic_year_name }}</p><h2 id="teacher-roster-title" class="panel-title">{{ model.selected_class.class_name }} · {{ model.total }} siswa</h2></div></div>
+          {% if model.rows %}
+            <div class="table-wrap" tabindex="0" aria-label="Tabel siswa, dapat digulir mendatar"><table class="data-table"><caption class="sr-only">Siswa kelas {{ model.selected_class.class_name }}</caption><thead><tr><th scope="col">Nama</th><th scope="col">NISN</th><th scope="col">Status akun</th><th scope="col">Detail</th></tr></thead><tbody>
+              {% for row in model.rows %}<tr><th scope="row"><a class="table-primary-link" href="{{ url_for('teacher.student_detail', student_id=row.student_id, class_id=model.selected_class.class_id, source='students', q=model.q, page=model.page) }}">{{ row.full_name }}</a></th><td>{{ row.nisn }}</td><td><span class="status-badge {{ 'status-success' if row.is_active else 'status-info' }}">{{ 'Aktif' if row.is_active else 'Nonaktif' }}</span></td><td><a class="ghost-button" href="{{ url_for('teacher.student_detail', student_id=row.student_id, class_id=model.selected_class.class_id, source='students', q=model.q, page=model.page) }}">Buka detail</a></td></tr>{% endfor %}
+            </tbody></table></div>
+            <nav class="teacher-pagination" aria-label="Halaman daftar siswa"><p class="muted-copy">Halaman {{ model.page }} dari {{ model.pages }} · {{ model.total }} siswa</p><div>{% if model.page > 1 %}<a class="ghost-button" href="{{ url_for('teacher.students', class_id=model.selected_class.class_id, q=model.q or None, page=model.page - 1) }}">Sebelumnya</a>{% else %}<span class="ghost-button" aria-disabled="true">Sebelumnya</span>{% endif %}{% if model.page < model.pages %}<a class="ghost-button" href="{{ url_for('teacher.students', class_id=model.selected_class.class_id, q=model.q or None, page=model.page + 1) }}">Berikutnya</a>{% else %}<span class="ghost-button" aria-disabled="true">Berikutnya</span>{% endif %}</div></nav>
+          {% else %}
+            <div class="empty-state illustrated-empty-state"><img class="empty-state-illustration" src="{{ url_for('static', filename='illustrations/empty.svg') }}" width="360" height="220" alt=""><h3 class="panel-title">Tidak ada siswa yang cocok</h3><p class="muted-copy">Coba periksa nama/NISN atau hapus pencarian.</p></div>
+          {% endif %}
+        </section>
+      {% endif %}
+    {% endif %}
+  </main>
+</div>{{ bottom_nav('teacher', 'students') }}</div>
+{% endblock %}

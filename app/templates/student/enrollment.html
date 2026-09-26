@@ -2,6 +2,11 @@
 {% from 'components/icons.html' import icon %}
 {% block title %}Pendaftaran Wajah — Sistem Presensi{% endblock %}
 {% block body_class %}student-page{% endblock %}
+{% block head %}
+  {% if progress and not progress.face_registered and progress.saved_count < progress.total_poses %}
+    <script src="{{ url_for('static', filename='js/face-enrollment.js') }}" defer></script>
+  {% endif %}
+{% endblock %}
 {% block body %}
 <main class="student-shell main-content" aria-labelledby="enrollment-title">
   <header class="content-header">
@@ -15,21 +20,60 @@
   {% if database_unavailable %}<div class="flash flash-error" role="alert"><p>Progres belum dapat dimuat. Periksa koneksi lalu coba lagi.</p><a class="ghost-button" href="{{ url_for('student.enrollment') }}">Coba lagi</a></div>
   {% elif progress %}
     <section class="bento-grid" aria-label="Progres pendaftaran wajah">
-      <article class="panel panel-span-12 panel-purple">
-        <p class="eyebrow">Progres</p><h2 class="panel-value">{{ progress.saved_count }}<span aria-hidden="true">/</span>{{ progress.total_poses }}</h2>
-        <p class="muted-copy" style="color:#fff">pose valid tersimpan. Pendaftaran belum selesai sampai semua pose diproses dan model wajah berhasil diperbarui.</p>
+      <article class="panel panel-span-12 panel-coral">
+        <img id="enrollment-illustration" class="student-illustration enrollment-illustration" src="{{ url_for('static', filename='illustrations/enrollment-v2.webp') }}" width="1647" height="955" alt="">
+        <p class="eyebrow">Progres pendaftaran wajah</p><h2 class="panel-value"><span id="enrollment-saved-count">{{ progress.saved_count }}</span><span aria-hidden="true">/</span>{{ progress.total_poses }}</h2>
+        <p id="enrollment-progress-message" class="muted-copy">pose valid tersimpan. Pendaftaran belum selesai sampai server memperbarui model wajah.</p>
       </article>
       <article class="panel panel-span-12">
         <h2 class="panel-title">Tiga arah pengambilan</h2>
-        <ol class="profile-details" aria-label="Status pose wajah">
-          {% for pose in progress.poses %}<li style="list-style:none; display:flex; justify-content:space-between; gap:1rem; padding:.85rem 0; border-bottom:1px solid var(--color-border)">
-            <span><strong>{{ loop.index }}. {{ pose.label }}</strong><br><span class="muted-copy">{% if pose.key == 'front' %}Hadap lurus ke kamera{% elif pose.key == 'left' %}Putar wajah ke kiri{% else %}Putar wajah ke kanan{% endif %}</span></span>
-            <span class="status-badge {{ 'status-success' if pose.saved else 'status-warning' }}">{{ 'Tersimpan' if pose.saved else 'Belum diambil' }}</span>
+        <ol class="enrollment-pose-list" aria-label="Status pose wajah">
+          {% for pose in progress.poses %}<li class="enrollment-pose-row" data-pose-row="{{ pose.key }}">
+            <span><strong>{{ loop.index }}. {{ pose.label }}</strong><br><span class="muted-copy">{% if pose.key == 'front' %}Hadap lurus ke kamera{% elif pose.key == 'left' %}Putar wajah ke kiri perlahan{% else %}Putar wajah ke kanan perlahan{% endif %}</span></span>
+            <span class="enrollment-pose-actions">
+              <span class="status-badge {{ 'status-success' if pose.saved else 'status-warning' }}" data-pose-status="{{ pose.key }}">{{ 'Tersimpan' if pose.saved else 'Belum diambil' }}</span>
+              {% if progress.saved_count < progress.total_poses %}<button class="ghost-button enrollment-retake" type="button" data-recapture-pose="{{ pose.key }}" aria-label="Ambil ulang pose {{ pose.label|lower }}" {% if not pose.saved %}hidden disabled{% endif %}>Ambil ulang</button>{% endif %}
+            </span>
           </li>{% endfor %}
         </ol>
-        <p class="muted-copy" style="margin-top:1rem">Pengambilan kamera, pemeriksaan kualitas, dan kedipan akan tersedia pada langkah enrollment berikutnya.</p>
+        {% if progress.saved_count < progress.total_poses %}
+          <div id="face-enrollment" class="enrollment-capture" data-csrf="{{ csrf_token() }}"
+               data-capture-url="{{ url_for('face.enrollment_capture') }}"
+               data-success-illustration-url="{{ url_for('static', filename='illustrations/success-v2.webp') }}"
+               data-saved-poses="{{ progress.poses|selectattr('saved')|map(attribute='key')|join(',') }}">
+            <div class="enrollment-notice">
+              <p class="panel-title">Sebelum kamera dinyalakan</p>
+              <p class="muted-copy">Foto dikirim melalui HTTPS ke server untuk pemeriksaan. Pose yang lolos disimpan di penyimpanan privat untuk pendaftaran wajah. Kamera hanya aktif saat pengambilan berlangsung.</p>
+              <label class="checkbox-field" for="enrollment-notice-read">
+                <input id="enrollment-notice-read" type="checkbox">
+                <span>Saya sudah membaca informasi pengambilan dan penyimpanan sampel wajah.</span>
+              </label>
+            </div>
+            <section class="enrollment-camera" aria-labelledby="enrollment-camera-title">
+              <h3 id="enrollment-camera-title" class="panel-title">Ambil pose berikutnya</h3>
+              <div class="enrollment-camera-frame">
+                <div class="camera-placeholder" id="camera-placeholder">
+                  <span class="camera-placeholder-mark" aria-hidden="true">●</span>
+                  <p>Kamera belum dinyalakan</p>
+                </div>
+                <video id="enrollment-video" class="enrollment-video" autoplay muted playsinline hidden aria-label="Pratinjau kamera untuk pendaftaran wajah"></video>
+              </div>
+              <p id="enrollment-status" class="enrollment-status muted-copy" role="status" aria-live="polite" aria-atomic="true">Nyalakan kamera, posisikan wajah sesuai arahan, lalu tekan Ambil foto.</p>
+              <div class="enrollment-camera-actions">
+                <button id="enrollment-start" class="primary-button button-wide" type="button" disabled>Aktifkan kamera</button>
+                <button id="enrollment-capture" class="primary-button button-wide" type="button" hidden disabled>Ambil foto pose ini</button>
+                <button id="enrollment-stop" class="ghost-button button-wide" type="button" hidden disabled>Hentikan kamera</button>
+              </div>
+              <p class="muted-copy enrollment-camera-help">Gunakan kamera depan, satu wajah di tengah frame, mata terbuka, dan latar yang tidak ramai. Setiap foto diperiksa server sebelum disimpan.</p>
+              <canvas id="enrollment-canvas" hidden></canvas>
+            </section>
+          </div>
+        {% else %}
+          <p class="muted-copy enrollment-waiting">Tiga pose sudah tersimpan. Enrollment belum selesai sampai model wajah diproses pada langkah berikutnya; akun ini tetap berada di halaman pendaftaran untuk sementara.</p>
+          <p hidden class="muted-copy">Mengalihkan dalam <span id="enrollment-countdown">3</span> detik…</p>
+        {% endif %}
       </article>
-      <article class="panel panel-span-12 panel-lime"><p class="panel-title">Sebelum memulai</p><p class="muted-copy">Gunakan tempat terang, lepaskan penutup wajah, dan pastikan satu wajah terlihat jelas. Izinkan kamera saat browser memintanya.</p></article>
+      <article class="panel panel-span-12 panel-mint"><p class="panel-title">Agar foto terbaca</p><p class="muted-copy">Gunakan tempat terang, lepaskan penutup wajah, arahkan kamera sejajar wajah, buka mata lebar, lalu tekan Ambil foto. Jika pemeriksaan gagal, baca pesan yang tampil lalu coba lagi; sampel yang sudah tersimpan tetap aman.</p></article>
     </section>
   {% endif %}
 </main>

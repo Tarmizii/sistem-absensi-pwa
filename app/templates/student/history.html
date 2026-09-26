@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% from 'components/navigation.html' import bottom_nav with context %}
+{% set status_marks = {'present':'H', 'late':'T', 'permit':'I', 'sick':'S', 'absent':'A', 'holiday':'L', 'pending':'B', 'upcoming':'·', 'no_schedule':'–', 'no_class':'–'} %}
+{% block title %}Riwayat Presensi — Sistem Presensi{% endblock %}
+{% block body_class %}student-page student-history-page{% endblock %}
+{% block body %}
+<div class="student-shell">
+  <main class="main-content" aria-labelledby="student-history-title">
+    <header class="content-header">
+      <div>
+        <p class="eyebrow">Riwayat presensi</p>
+        <h1 id="student-history-title" class="display-title">Kalender kehadiran</h1>
+        <p class="muted-copy">{{ history.full_name if history else 'Lihat status dan waktu presensi bulan ini.' }}</p>
+      </div>
+      <a class="profile-chip" href="{{ url_for('role.student_profile') }}">Profil</a>
+    </header>
+    {% if error %}
+      <div class="flash flash-error" role="alert">
+        <p>{{ error }}</p>
+        {% if error_status == 503 %}<a class="ghost-button" href="{{ url_for('student.attendance_history', month=request.args.get('month')) }}">Coba lagi</a>{% endif %}
+        {% if error_status == 403 %}<a class="ghost-button" href="{{ url_for('student.attendance_history') }}">Buka bulan berjalan</a>{% endif %}
+      </div>
+    {% elif history %}
+      <section class="bento-grid" aria-label="Kalender presensi bulan berjalan">
+        <article class="panel panel-span-12 student-calendar-panel">
+          <div class="history-calendar-heading">
+            <div><p class="eyebrow">Bulan berjalan</p><h2 class="panel-title">{{ history.month_label }}</h2></div>
+            <a class="ghost-button" href="{{ url_for('role.student_dashboard') }}">Kembali ke beranda</a>
+          </div>
+          <ul class="attendance-legend" aria-label="Keterangan warna status">
+            {% for key, label in [('present','Hadir'),('late','Terlambat'),('permit','Izin'),('sick','Sakit'),('absent','Alpa'),('holiday','Libur'),('pending','Belum Absen')] %}
+              <li><span class="calendar-legend-mark attendance-status-{{ key }}" aria-hidden="true">{{ status_marks[key] }}</span>{{ label }}</li>
+            {% endfor %}
+          </ul>
+          <div class="attendance-calendar-scroll">
+            <table class="attendance-calendar">
+              <caption class="sr-only">Kalender presensi {{ history.month_label }}</caption>
+              <thead><tr>{% for day_name in ['Sen','Sel','Rab','Kam','Jum','Sab','Min'] %}<th scope="col">{{ day_name }}</th>{% endfor %}</tr></thead>
+              <tbody>
+                {% for week in history.weeks %}
+                  <tr>
+                    {% for day in week %}
+                      {% if day %}
+                        <td>
+                          {% if day.is_future %}
+                            <span class="attendance-calendar-day attendance-status-{{ day.status_key }}" aria-label="{{ day.day }}: {{ day.status }}"><span>{{ day.day }}</span><small aria-hidden="true">{{ status_marks.get(day.status_key, '–') }}</small></span>
+                          {% else %}
+                            <a class="attendance-calendar-day attendance-status-{{ day.status_key }} {{ 'is-selected' if day.date == history.selected_date else '' }}" href="{{ url_for('student.attendance_history', month=history.month, date=day.date) }}" aria-current="{{ 'date' if day.date == history.selected_date else 'false' }}" aria-label="{{ day.day }}: {{ day.status }}"><span>{{ day.day }}</span><small aria-hidden="true">{{ status_marks.get(day.status_key, '–') }}</small></a>
+                          {% endif %}
+                        </td>
+                      {% else %}<td class="attendance-calendar-empty" aria-hidden="true"></td>{% endif %}
+                    {% endfor %}
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <p class="muted-copy history-calendar-help">Pilih tanggal untuk melihat rinciannya. Tanda · berarti belum berlangsung; – berarti belum ada kelas atau jadwal.</p>
+        </article>
+
+        <article class="panel panel-span-12" id="attendance-date-detail" aria-live="polite">
+          <p class="eyebrow">Rincian tanggal</p>
+          <h2 class="panel-title">{{ history.detail.date }}</h2>
+          <p class="panel-value attendance-detail-status attendance-status-{{ history.detail.status_key }}">{{ history.detail.status }}</p>
+          {% if history.detail.checkin_time or history.detail.checkout_time %}
+            <dl class="profile-details attendance-detail-times">
+              <div><dt>Masuk</dt><dd>{{ history.detail.checkin_time or '—' }}</dd></div>
+              <div><dt>Pulang</dt><dd>{{ history.detail.checkout_time or '—' }}</dd></div>
+              {% if history.detail.source %}<div><dt>Sumber</dt><dd>{{ history.detail.source }}</dd></div>{% endif %}
+            </dl>
+          {% endif %}
+          {% if history.detail.notes %}<p class="muted-copy">Keterangan: {{ history.detail.notes }}</p>{% endif %}
+          {% if history.detail.class_name %}<p class="muted-copy">{{ history.detail.class_name }}{% if history.detail.academic_year_name %} · {{ history.detail.academic_year_name }}{% endif %}</p>{% endif %}
+        </article>
+      </section>
+    {% endif %}
+  </main>
+  {{ bottom_nav('student', 'history') }}
+</div>
+{% endblock %}

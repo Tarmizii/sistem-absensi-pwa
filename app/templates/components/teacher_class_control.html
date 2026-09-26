@@ -1,0 +1,16 @@
+{% macro class_control(classes, selected_class, action_url, submit_label='Tampilkan') -%}
+  <form class="teacher-class-control" method="get" action="{{ action_url }}" novalidate>
+    <div class="field">
+      <label for="teacher-class">Kelas</label>
+      <select id="teacher-class" name="class_id">
+        {% if not classes %}<option value="">Belum ada kelas ditugaskan</option>{% endif %}
+        {% for klass in classes %}
+          <option value="{{ klass.class_id }}" {% if selected_class and klass.class_id == selected_class.class_id %}selected{% endif %}>
+            {{ klass.class_name }} · {{ klass.academic_year_name }}{% if not klass.class_active %} · nonaktif{% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <button class="ghost-button" type="submit">{{ submit_label }}</button>
+  </form>
+{%- endmacro %}

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="320" viewBox="0 0 400 320" fill="none">
+  <title>Belajar bersama, hadir setiap hari</title>
+  <circle cx="224" cy="149" r="125" fill="#FFF5E3" fill-opacity=".35"/>
+  <path d="M62 276h309M305 34v24m-12-12h24" stroke="#303044" stroke-width="2" stroke-linecap="round"/>
+  <path d="M315 272v-61c-28-22-31-47-21-56 17 4 28 27 21 56 3-45 18-64 33-60 5 24-7 41-33 60 22-18 40-16 43-6-8 17-26 16-43 6" fill="#207A56"/>
+  <path d="M300 248h31l-5 29h-21z" fill="#FFF5E3"/>
+  <rect x="45" y="44" width="94" height="75" rx="4" transform="rotate(-7 45 44)" fill="#FFF5E3"/>
+  <path d="m63 63 54-7m-51 23 31-4m-29 20 46-6" stroke="#F2C879" stroke-width="7"/>
+  <path d="m270 75 67 10-9 58-67-10z" fill="#303044"/>
+  <path d="m277 85 51 7-6 41-51-7z" fill="#FFF5E3"/>
+  <circle cx="297" cy="108" r="12" fill="#7CD3AA"/><path d="m292 108 4 5 9-10" stroke="#303044" stroke-width="2"/>
+  <path d="m159 220-32 31-48 8 2 17h66l46-41" fill="#303044"/>
+  <path d="m197 203 51 25-17 44 16 7 37-60-61-44" fill="#FFF5E3"/>
+  <path d="m231 268 16 7 19 1c10 1 13 9 6 12h-43zM80 258l2 17-20 11c-9 3-12-2-10-8l9-20z" fill="#A6412D"/>
+  <path d="M145 122c-24 4-44 26-44 62l5 45 89 8 47-38-26-55-30-17z" fill="#7CD3AA"/>
+  <path d="m139 139-6 48 39 19m35-60 21 34" stroke="#207A56" stroke-width="2"/>
+  <path d="M157 122v-24l27-4 6 36c-11 10-21 5-33-8z" fill="#DFA584"/>
+  <path d="M144 78c0-23 16-38 33-32 27-11 39 12 29 32l-7 24c-5 19-26 22-37 11z" fill="#303044"/>
+  <path d="M163 73c10 0 23-7 28-13 0 13 5 20 13 22l-6 25c-7 14-24 12-32 0l-6-23c-12 0-12-13-4-15z" fill="#F0B794"/>
+  <path d="m183 89 1 9 6-1m-11 9 9 1" stroke="#A6412D" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="177" cy="86" r="1.5" fill="#303044"/><circle cx="194" cy="86" r="1.5" fill="#303044"/>
+  <path d="m134 185 35 15 24-5 9 8-19 12-24-2-33-16" fill="#F0B794"/>
+  <path d="m204 187 29-18 7-31 12 2-3 37-33 26" fill="#F0B794"/>
+  <rect x="234" y="106" width="24" height="43" rx="3" transform="rotate(12 234 106)" fill="#303044"/>
+  <path d="m155 226 58-47 55 15-57 43z" fill="#F2C879"/>
+  <path d="m211 236 26-51 42 10-24 49z" fill="#F2C879" stroke="#303044" stroke-width="1.5"/>
+  <circle cx="247" cy="216" r="4" fill="#FFF5E3"/>
+  <g fill="#FFF5E3" fill-opacity=".65"><circle cx="119" cy="166" r="5"/><circle cx="148" cy="151" r="5"/><circle cx="173" cy="155" r="5"/><circle cx="195" cy="169" r="5"/><circle cx="149" cy="175" r="5"/><circle cx="118" cy="207" r="5"/><circle cx="174" cy="184" r="5"/></g>
+</svg>

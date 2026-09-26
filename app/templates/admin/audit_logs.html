@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% from 'components/navigation.html' import admin_sidebar with context %}
+{% block title %}Audit log — Sistem Presensi{% endblock %}
+{% block body_class %}admin-page{% endblock %}
+{% block body %}
+<div class="app-shell admin-shell">
+  {{ admin_sidebar('audit') }}
+  <main class="main-content" aria-labelledby="admin-audit-title">
+    <div class="desktop-only-notice" role="note">Admin dirancang untuk layar desktop dengan lebar minimal 1024px.</div>
+    <header class="content-header"><div><p class="eyebrow">Riwayat perubahan</p><h1 class="display-title" id="admin-audit-title">Jejak aktivitas.</h1><p class="muted-copy">Catatan aksi Admin, Guru, Siswa, dan job sistem. Data rahasia tidak ditampilkan.</p></div></header>
+    <form class="teacher-filter-form" method="get" action="{{ url_for('admin.audit_logs') }}" novalidate>
+      <div class="field"><label for="audit-actor">Pelaku</label><input id="audit-actor" name="actor" type="text" maxlength="100" value="{{ model.actor if model else filters.actor }}" autocomplete="off"></div>
+      <div class="field"><label for="audit-from">Dari tanggal</label><input id="audit-from" name="from" type="date" value="{{ model.date_from if model else filters['from'] }}"></div>
+      <div class="field"><label for="audit-to">Sampai tanggal</label><input id="audit-to" name="to" type="date" value="{{ model.date_to if model else filters['to'] }}"></div>
+      <div class="field"><label for="audit-action">Aksi</label><select id="audit-action" name="action"><option value="">Semua aksi</option>{% if model %}{% for action in model.actions %}<option value="{{ action }}" {% if model.action == action %}selected{% endif %}>{{ action.replace('_', ' ') }}</option>{% endfor %}{% endif %}</select></div>
+      <button class="primary-button" type="submit">Terapkan filter</button>
+    </form>
+
+    {% if database_unavailable %}
+      <section class="panel empty-state" role="alert"><h2 class="panel-title">Audit log belum dapat dimuat</h2><p class="muted-copy">Periksa koneksi database, lalu coba muat ulang halaman.</p><a class="primary-button" href="{{ retry_url }}">Coba muat ulang</a></section>
+    {% elif model.rows %}
+      <section class="panel teacher-table-panel" aria-labelledby="audit-table-title">
+        <div class="teacher-section-heading"><div><p class="eyebrow">Aktivitas tercatat</p><h2 class="panel-title" id="audit-table-title">{{ model.total }} hasil</h2></div></div>
+        <div class="table-wrap" tabindex="0" aria-label="Tabel audit log, dapat digulir mendatar">
+          <table class="data-table"><caption class="sr-only">Jejak aktivitas Admin, Guru, Siswa, dan sistem</caption><thead><tr><th scope="col">Waktu WIB</th><th scope="col">Pelaku</th><th scope="col">Aksi</th><th scope="col">Target</th></tr></thead><tbody>
+            {% for row in model.rows %}<tr><td>{{ row.created_at }}</td><td>{{ row.actor_label }}</td><td>{{ row.action.replace('_', ' ') }}</td><td>{{ row.target_type }} · {{ row.target_id }}</td></tr>{% endfor %}
+          </tbody></table>
+        </div>
+        <nav class="teacher-pagination" aria-label="Halaman audit log"><p class="muted-copy">Halaman {{ model.page }} dari {{ model.pages }} · {{ model.total }} hasil</p><div>{% if model.page > 1 %}<a class="ghost-button" href="{{ url_for('admin.audit_logs', **{'actor': model.actor or None, 'from': model.date_from or None, 'to': model.date_to or None, 'action': model.action or None, 'page': model.page - 1}) }}">Sebelumnya</a>{% else %}<span class="ghost-button" aria-disabled="true">Sebelumnya</span>{% endif %}{% if model.page < model.pages %}<a class="ghost-button" href="{{ url_for('admin.audit_logs', **{'actor': model.actor or None, 'from': model.date_from or None, 'to': model.date_to or None, 'action': model.action or None, 'page': model.page + 1}) }}">Berikutnya</a>{% else %}<span class="ghost-button" aria-disabled="true">Berikutnya</span>{% endif %}</div></nav>
+      </section>
+    {% else %}
+      <section class="panel empty-state"><h2 class="panel-title">Tidak ada aktivitas yang cocok</h2><p class="muted-copy">Periksa nama pelaku, rentang tanggal, atau aksi.</p></section>
+    {% endif %}
+  </main>
+</div>
+{% endblock %}

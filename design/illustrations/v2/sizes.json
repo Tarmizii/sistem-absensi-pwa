@@ -1,0 +1,44 @@
+[
+  {
+    "name": "admin-welcome-v2",
+    "width": 1402,
+    "height": 1122,
+    "bytes": 129488
+  },
+  {
+    "name": "attendance-v2",
+    "width": 1604,
+    "height": 980,
+    "bytes": 81870
+  },
+  {
+    "name": "enrollment-v2",
+    "width": 1647,
+    "height": 955,
+    "bytes": 110142
+  },
+  {
+    "name": "school-day-v2",
+    "width": 1402,
+    "height": 1122,
+    "bytes": 109348
+  },
+  {
+    "name": "success-v2",
+    "width": 1604,
+    "height": 980,
+    "bytes": 104004
+  },
+  {
+    "name": "teacher-welcome-v2",
+    "width": 1604,
+    "height": 980,
+    "bytes": 70940
+  },
+  {
+    "name": "welcome-v2",
+    "width": 1603,
+    "height": 981,
+    "bytes": 142310
+  }
+]

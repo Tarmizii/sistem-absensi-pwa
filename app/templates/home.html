@@ -7,8 +7,9 @@
 {% block body %}
   <main class="auth-card" aria-labelledby="home-title">
     <span class="brand-mark">Presensi SMA 4</span>
-    <p class="eyebrow" style="margin-top: 2.4rem;">SMA Negeri 4 Lhokseumawe</p>
-    <h1 id="home-title" class="display-title">Hadir dengan tenang.</h1>
+    <img class="auth-illustration home-illustration" src="{{ url_for('static', filename='illustrations/welcome-v2.webp') }}" width="1603" height="981" alt="">
+    <p class="eyebrow" style="margin-top: 1.5rem;">SMA Negeri 4 Lhokseumawe</p>
+    <h1 id="home-title" class="display-title">Hari belajar dimulai dengan hadir.</h1>
     <p class="muted-copy">Satu ruang untuk siswa, guru, dan Admin mengelola presensi sekolah.</p>
     <a class="primary-button button-wide" href="{{ url_for('auth.login') }}">Masuk ke sistem {{ icon('sparkle') }}</a>
     <p class="muted-copy" style="margin: 1rem 0 0; text-align: center; font-size: .78rem;">Akses sesuai role sekolah Anda.</p>

@@ -1,0 +1,32 @@
+# systemd unit untuk Gunicorn (Flask app factory di run:app).
+# Pasang di VPS: /etc/systemd/system/sman4-presensi.service
+# Sesuaikan User, Group, dan WorkingDirectory dengan akun deploy VPS.
+# Enable: systemctl enable --now sman4-presensi
+
+[Unit]
+Description=Sistem Presensi SMA Negeri 4 Lhokseumawe (Gunicorn)
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=notify
+User=presensi
+Group=www-data
+WorkingDirectory=/opt/sistem-absensi-pwa
+# Environment diambil dari /opt/sistem-absensi-pwa/.env (JANGAN commit file ini).
+EnvironmentFile=/opt/sistem-absensi-pwa/.env
+ExecStart=/opt/sistem-absensi-pwa/.venv/bin/gunicorn \
+    --workers 3 \
+    --bind 127.0.0.1:8000 \
+    --timeout 60 \
+    --access-logfile /var/log/sman4-presensi/gunicorn-access.log \
+    --error-logfile /var/log/sman4-presensi/gunicorn-error.log \
+    run:app
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=5
+# Batas upload frame kamera (sinkron dengan Nginx client_max_body_size).
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target

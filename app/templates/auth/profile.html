@@ -12,10 +12,10 @@
         <header class="content-header">
           <div>
             <p class="eyebrow">Profil akun</p>
-            <h1 class="display-title">Akun {{ username }}.</h1>
+            <h1 class="display-title">Profil {{ student_profile.full_name if student_profile else username }}.</h1>
             <p class="muted-copy">Informasi dasar akun Anda tersimpan di sini.</p>
           </div>
-          <span class="profile-chip"><span class="avatar">{{ username[:1]|upper }}</span>Siswa</span>
+          <span class="profile-chip"><span class="avatar">{{ (student_profile.full_name if student_profile else username)[:1]|upper }}</span>Siswa</span>
         </header>
         {% include 'auth/profile_content.html' %}
       </main>

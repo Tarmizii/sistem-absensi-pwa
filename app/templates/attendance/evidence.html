@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Bukti Presensi — Sistem Presensi{% endblock %}
+{% block body_class %}evidence-page{% endblock %}
+{% block body %}
+<main class="evidence-content">
+  <header class="content-header">
+    <div><p class="eyebrow">Bukti presensi</p><h1 class="display-title">{{ model.student_name }}</h1>
+      <p class="muted-copy">{{ model.class_name or 'Kelas tidak tersedia' }} · {{ model.date }}</p></div>
+    <a class="ghost-button" href="{{ back_url }}">Kembali</a>
+  </header>
+  <section class="panel" aria-labelledby="evidence-summary-title">
+    <h2 class="panel-title" id="evidence-summary-title">{{ model.status_label }}</h2>
+    <p class="muted-copy">{{ model.source_label or 'Sumber tidak tersedia' }}</p>
+    {% if model.notes %}<p>Keterangan: {{ model.notes }}</p>{% endif %}
+    <dl class="profile-details attendance-detail-times">
+      <div><dt>Masuk</dt><dd>{{ model.checkin_time or '—' }}</dd></div>
+      <div><dt>Pulang</dt><dd>{{ model.checkout_time or '—' }}</dd></div>
+    </dl>
+  </section>
+  <section class="bento-grid evidence-grid" aria-label="Foto dan lokasi yang tercatat">
+    {% for phase, label, time, accuracy, location_available, has_photo in [
+      ('checkin', 'Presensi masuk', model.checkin_time, model.checkin_accuracy, model.checkin_location_available, model.has_checkin_photo),
+      ('checkout', 'Presensi pulang', model.checkout_time, model.checkout_accuracy, model.checkout_location_available, model.has_checkout_photo)
+    ] %}
+      <article class="panel panel-span-6">
+        <h2 class="panel-title">{{ label }}</h2>
+        <p class="muted-copy">Waktu WIB: {{ time or 'Tidak tersedia' }}</p>
+        {% if has_photo %}
+          <img class="evidence-photo" src="{{ url_for('attendance.evidence_image', record_id=model.record_id, phase=phase) }}"
+               alt="Foto bukti {{ label|lower }}" loading="lazy">
+        {% else %}<p class="muted-copy">Foto tidak tersedia.</p>{% endif %}
+        {% if location_available %}
+          <p>Lokasi diterima saat presensi{% if accuracy is not none %} · accuracy tercatat {{ accuracy }} m{% endif %}.</p>
+        {% else %}<p class="muted-copy">Data lokasi tidak tersedia.</p>{% endif %}
+      </article>
+    {% endfor %}
+  </section>
+</main>
+{% endblock %}
