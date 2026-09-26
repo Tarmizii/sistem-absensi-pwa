@@ -160,7 +160,7 @@ Dokumen ini mencatat perilaku UI yang dapat dilihat pengguna. Aturan domain pres
 - Halaman T04 POC tidak ikut redesign: body POC mempertahankan token warna lama dan theme-color lamanya. JS password bersama melewati halaman POC.
 - State jaringan tampil di alur dokumen agar tidak menutupi field atau tombol. Nav Siswa/Guru mempertahankan tujuan lama dan memakai safe-area; Admin menampilkan pemberitahuan di lebar kurang dari 1024px. Status tetap memiliki label teks.
 - Aksi tampil/sembunyikan password ditambahkan ke field password Siswa/Guru/Admin; label dan `aria-pressed` berubah bersama visibilitas. Fokus keyboard terlihat, input/select/tanggal native dipertahankan, dan `prefers-reduced-motion` tetap aktif.
-- PWA menggunakan background/theme cream, ikon coral/mint, serta cache `presensi-shell-v8`. Worker tetap membatasi cache pada aset publik yang terdaftar, termasuk font dan ilustrasi; halaman/API privat/foto/logout/presensi tetap online-only.
+- PWA menggunakan background/theme cream, ikon coral/mint, serta cache `presensi-shell-v9`. Worker tetap membatasi cache pada aset publik yang terdaftar, termasuk font dan ilustrasi; halaman/API privat/foto/logout/presensi tetap online-only.
 
 ### Kontras dan keterbacaan tiga role
 
@@ -183,7 +183,7 @@ Pada 26 September 2026, screenshot preview menggunakan fixture sintetis setelah 
 
 ### Ilustrasi v2 — 26 September 2026
 
-Tujuh ilustrasi original sudah dibuat melalui built-in imagegen dan dipasang, termasuk sambutan khusus Guru dan Admin. Master PNG dan prompt: `design/illustrations/v2/`; WebP: `app/static/illustrations/`, total 748102 byte. Dua aset (`location-v2`, `empty-v2`) **masih tertunda karena kuota imagegen**; SVG lama tetap digunakan. Cache aktif v7, hanya aset publik. Paket sembilan ilustrasi dan T31 belum ditandai selesai. Rincian penempatan, verifikasi, batas pembesaran teks, dan bukti screenshot lokal: [catatan ilustrasi v2](design/illustrations/v2/README.md).
+Tujuh ilustrasi original sudah dibuat melalui built-in imagegen dan dipasang, termasuk sambutan khusus Guru dan Admin. Master PNG dan prompt: `design/illustrations/v2/`; WebP: `app/static/illustrations/`. Dua aset (`location-v2`, `empty-v2`) **masih tertunda karena kuota imagegen**; SVG lama (`location.svg`, `empty.svg`) tetap digunakan. Pada tahap B1 (Opsi B) ketujuh WebP di-downscale ke lebar 800px dengan kualitas dipertahankan (q=92) sehingga precache turun dari ±975 KB ke bawah 700 KB; master PNG tidak diubah dan skrip `scripts/optimize_illustrations.py` bersifat idempoten. Matriks aset aktif/superseded/pending ada di `app/static/illustrations/README.md`. Rincian penempatan, verifikasi, batas pembesaran teks, dan bukti screenshot lokal: [catatan ilustrasi v2](design/illustrations/v2/README.md).
 
 
 ### Login mobile — 26 September 2026

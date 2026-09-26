@@ -15,7 +15,7 @@
       {% if database_unavailable %}
         <p class="flash flash-error" role="alert">Database belum dapat dimuat. Muat ulang halaman untuk mencoba kembali.</p>
       {% elif not years %}
-        <div class="empty-state"><h3 class="panel-title">Belum ada tahun ajaran yang dapat dianalisis</h3><p class="muted-copy">Pilihannya muncul setelah tahun ajaran berakhir.</p></div>
+        <div class="empty-state"><img class="empty-state-illustration" src="{{ url_for('static', filename='illustrations/empty.svg') }}" width="360" height="220" alt=""><h3 class="panel-title">Belum ada tahun ajaran yang dapat dianalisis</h3><p class="muted-copy">Pilihannya muncul setelah tahun ajaran berakhir.</p></div>
       {% else %}
         <form method="post" action="{{ url_for('admin.analytics') }}" class="kmeans-form" data-once-submit novalidate>
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -35,7 +35,7 @@
           {% for row in history.rows %}<tr><td>{{ row.academic_year_name }}</td><td>{{ row.period_start }}—{{ row.period_end }}</td><td>{{ row.eligible_students }}</td><td>{{ row.ineligible_students }}</td><td>{{ row.reconstructed_snapshot_dates }}</td><td>{{ row.created_by }}</td><td><a class="table-primary-link" href="{{ url_for('admin.analytics_run', run_id=row.id) }}">Buka run</a></td></tr>{% endfor %}
         </tbody></table></div>
         <nav class="teacher-pagination" aria-label="Halaman histori analisis"><p class="muted-copy">Halaman {{ history.page }} dari {{ history.pages }} · {{ history.total }} run</p><div>{% if history.page > 1 %}<a class="ghost-button" href="{{ url_for('admin.analytics', page=history.page - 1) }}">Sebelumnya</a>{% else %}<span class="ghost-button" aria-disabled="true">Sebelumnya</span>{% endif %}{% if history.page < history.pages %}<a class="ghost-button" href="{{ url_for('admin.analytics', page=history.page + 1) }}">Berikutnya</a>{% else %}<span class="ghost-button" aria-disabled="true">Berikutnya</span>{% endif %}</div></nav>
-      {% elif history %}<div class="empty-state"><h3 class="panel-title">Belum ada histori analisis</h3><p class="muted-copy">Run yang berhasil akan tersimpan di sini.</p></div>{% endif %}
+      {% elif history %}<div class="empty-state"><img class="empty-state-illustration" src="{{ url_for('static', filename='illustrations/empty.svg') }}" width="360" height="220" alt=""><h3 class="panel-title">Belum ada histori analisis</h3><p class="muted-copy">Run yang berhasil akan tersimpan di sini.</p></div>{% endif %}
     </section>
   </main>
 </div>

@@ -6,17 +6,33 @@
     <meta name="theme-color" content="{% block theme_color %}#FFF5E3{% endblock %}">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Presensi SMA 4">
     <title>{% block title %}Sistem Presensi{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
     <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192.png') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
     {% block head %}{% endblock %}
   </head>
   <body class="{% block body_class %}{% endblock %}">
     <div class="network-status" id="network-status" role="status" aria-live="polite" aria-atomic="true" hidden>
       <span id="network-status-message"></span>
       <button class="ghost-button" id="network-reload" type="button" hidden>Muat ulang</button>
+    </div>
+    <div class="pwa-install-banner" id="pwa-install-banner" role="region" aria-label="Pasang aplikasi" hidden>
+      <div>
+        <p class="panel-title">Pasang Presensi di layar utama</p>
+        <p class="muted-copy">Akses cepat saat di sekolah, tetap membutuhkan internet saat presensi.</p>
+      </div>
+      <div class="pwa-banner-actions">
+        <button class="ghost-button" id="pwa-install-dismiss" type="button">Nanti</button>
+        <button class="primary-button" id="pwa-install-action" type="button">Pasang</button>
+      </div>
+    </div>
+    <div class="pwa-update-toast" id="pwa-update-toast" role="status" aria-live="polite" hidden>
+      <span>Versi baru tersedia.</span>
+      <button class="ghost-button" id="pwa-update-action" type="button">Muat ulang</button>
     </div>
     {% block body %}{% endblock %}
     <script src="{{ url_for('static', filename='js/pwa-register.js') }}" defer></script>

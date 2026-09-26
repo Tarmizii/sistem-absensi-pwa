@@ -48,7 +48,7 @@
           </table>
         </div>
       {% else %}
-        <div class="empty-state"><p class="panel-title">Belum ada Guru yang cocok.</p><p class="muted-copy">Tambah Guru baru atau ubah kata pencarian.</p></div>
+        <div class="empty-state"><img class="empty-state-illustration" src="{{ url_for('static', filename='illustrations/empty.svg') }}" width="360" height="220" alt=""><p class="panel-title">Belum ada Guru yang cocok.</p><p class="muted-copy">Tambah Guru baru atau ubah kata pencarian.</p></div>
       {% endif %}
     </section>
   </main>

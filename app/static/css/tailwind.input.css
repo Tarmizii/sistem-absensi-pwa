@@ -17,8 +17,8 @@
   --color-border: #e8ddcb;
   --color-control-border: #81796e;
   --color-success: #207a56;
-  --color-warning: #9b6515;
-  --color-danger: #b54444;
+  --color-warning: #8a5610;
+  --color-danger: #9c3232;
   --font-sans: "Plus Jakarta Sans", "Segoe UI", sans-serif;
   --radius-card: 1.5rem;
   --radius-control: 0.875rem;
@@ -129,9 +129,10 @@
   .eyebrow {
     margin: 0;
     color: var(--color-primary);
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     font-weight: 800;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
+    line-height: 1.4;
     text-transform: uppercase;
   }
 
@@ -493,6 +494,7 @@
     border-collapse: collapse;
     text-align: left;
     font-size: 0.9rem;
+    line-height: 1.55;
   }
 
   .data-table th,
@@ -1134,6 +1136,7 @@
   .attendance-dot {
     width: .7rem;
     height: .7rem;
+    border: 1px solid rgba(48, 48, 68, .65);
     border-radius: 50%;
   }
 
@@ -1151,10 +1154,11 @@
   }
 
   .attendance-calendar th {
-    padding: .45rem .2rem;
+    padding: .5rem .2rem;
     color: var(--color-muted);
     font-size: .75rem;
     font-weight: 600;
+    line-height: 1.35;
     text-align: center;
   }
 
@@ -1327,6 +1331,69 @@
   .kmeans-charts > div { position: relative; height: 220px; min-width: 0; padding: .8rem; border: 1px solid var(--color-border); border-radius: 1rem; }
   .kmeans-charts .panel-title { margin: 0 0 .5rem; font-size: .95rem; }
   .kmeans-charts canvas { max-height: 165px; }
+
+  .pwa-install-banner {
+    position: fixed;
+    right: 1rem;
+    bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    left: 1rem;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: .8rem;
+    max-width: 30rem;
+    margin-inline: auto;
+    padding: 1rem 1.1rem;
+    color: var(--color-ink);
+    background: var(--color-surface);
+    border: 1px solid var(--color-control-border);
+    border-radius: var(--radius-card);
+    box-shadow: 0 14px 40px rgb(48 48 68 / 18%);
+  }
+
+  .pwa-install-banner[hidden],
+  .pwa-update-toast[hidden] { display: none; }
+
+  .pwa-install-banner .panel-title { font-size: 1rem; line-height: 1.3; }
+
+  .pwa-install-banner .muted-copy { margin-top: .3rem; font-size: .8125rem; }
+
+  .pwa-banner-actions {
+    display: flex;
+    gap: .6rem;
+  }
+
+  .pwa-banner-actions .primary-button,
+  .pwa-banner-actions .ghost-button { flex: 1; min-height: 2.75rem; }
+
+  .pwa-update-toast {
+    position: fixed;
+    top: max(.75rem, env(safe-area-inset-top));
+    left: 50%;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    transform: translateX(-50%);
+    max-width: calc(100% - 1.5rem);
+    padding: .6rem .7rem .6rem 1rem;
+    color: var(--color-ink);
+    background: var(--color-mint-soft);
+    border: 1px solid var(--color-control-border);
+    border-radius: 999px;
+    box-shadow: var(--shadow-card);
+    font-size: .8125rem;
+    font-weight: 600;
+  }
+
+  .pwa-update-toast .ghost-button {
+    min-height: 2.25rem;
+    padding: .3rem .8rem;
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+
+  .pwa-install-banner .primary-button:disabled { cursor: not-allowed; }
 
   .network-status {
     position: sticky;
@@ -1855,7 +1922,7 @@
     }
     .login-page .auth-hero::before, .login-page .auth-hero::after { display: none; }
     .login-page .auth-hero .auth-illustration { grid-column: 2; grid-row: 1 / 3; width: 100%; margin: 0; align-self: center; }
-    .login-page .auth-hero .eyebrow { display: block; grid-column: 1; grid-row: 1; min-width: 0; overflow-wrap: anywhere; margin: 0; font-size: .75rem; line-height: 1.5; letter-spacing: .04em; color: var(--color-ink); }
+    .login-page .auth-hero .eyebrow { display: block; grid-column: 1; grid-row: 1; min-width: 0; overflow-wrap: anywhere; margin: 0; font-size: .8125rem; line-height: 1.5; letter-spacing: .04em; color: var(--color-ink); }
     .login-page .auth-hero .muted-copy { display: none; }
     .login-page .auth-hero .display-title { grid-column: 1; grid-row: 2; font-size: 1.125rem; line-height: 1.3; margin: 0; overflow-wrap: anywhere; }
     .login-page .auth-layout .auth-card {

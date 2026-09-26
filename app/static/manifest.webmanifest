@@ -3,9 +3,12 @@
   "name": "Sistem Presensi SMA Negeri 4 Lhokseumawe",
   "short_name": "Presensi SMA 4",
   "description": "Sistem presensi SMA Negeri 4 Lhokseumawe",
+  "lang": "id",
+  "dir": "ltr",
   "start_url": "/login?source=pwa",
   "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#FFF5E3",
   "theme_color": "#FFF5E3",
   "icons": [

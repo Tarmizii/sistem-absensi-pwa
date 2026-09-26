@@ -43,7 +43,7 @@
           </div>
           <nav class="teacher-pagination" aria-label="Halaman jurnal Admin"><p class="muted-copy">Halaman {{ model.page }} dari {{ model.pages }} · {{ model.total }} record</p><div>{% if model.page > 1 %}<a class="ghost-button" href="{{ url_for('admin.attendance', date=model.date, class_id=model.class_id or None, status=model.status or None, q=model.q or None, page=model.page - 1) }}">Sebelumnya</a>{% else %}<span class="ghost-button" aria-disabled="true">Sebelumnya</span>{% endif %}{% if model.page < model.pages %}<a class="ghost-button" href="{{ url_for('admin.attendance', date=model.date, class_id=model.class_id or None, status=model.status or None, q=model.q or None, page=model.page + 1) }}">Berikutnya</a>{% else %}<span class="ghost-button" aria-disabled="true">Berikutnya</span>{% endif %}</div></nav>
         {% else %}
-          <div class="empty-state"><h3 class="panel-title">Tidak ada record yang cocok</h3><p class="muted-copy">Periksa tanggal, kelas, status, atau pencarian. Status yang belum tersimpan tidak ditambahkan ke jurnal.</p></div>
+          <div class="empty-state"><img class="empty-state-illustration" src="{{ url_for('static', filename='illustrations/empty.svg') }}" width="360" height="220" alt=""><h3 class="panel-title">Tidak ada record yang cocok</h3><p class="muted-copy">Periksa tanggal, kelas, status, atau pencarian. Status yang belum tersimpan tidak ditambahkan ke jurnal.</p></div>
         {% endif %}
       </section>
     {% endif %}

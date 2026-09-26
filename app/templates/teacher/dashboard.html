@@ -14,7 +14,7 @@
           <h1 id="teacher-dashboard-title" class="display-title">Halo, {{ username }}.</h1>
           <p class="muted-copy">Kehadiran kelas hari ini · {{ model.today }} · {{ model.server_time }} WIB.</p>
         </div>
-        <img class="teacher-welcome-art" src="{{ url_for('static', filename='illustrations/teacher-welcome-v2.webp') }}" width="1604" height="980" alt="">
+        <img class="teacher-welcome-art" src="{{ url_for('static', filename='illustrations/teacher-welcome-v2.webp') }}" width="800" height="489" alt="">
         <a class="profile-chip" href="{{ url_for('role.teacher_profile') }}"><span class="avatar">{{ username[:1]|upper }}</span>Profil</a>
       </header>
 
@@ -60,7 +60,7 @@
           </section>
           </div>
         {% else %}
-          <section class="panel empty-state" aria-live="polite"><h2 class="panel-title">Ringkasan hari ini belum tersedia</h2><p class="muted-copy">Kelas historis tetap dapat dibuka pada jurnal dan daftar siswa. Ringkasan harian mengikuti roster aktif tahun ajaran berjalan.</p></section>
+          <section class="panel empty-state" aria-live="polite"><img class="empty-state-illustration" src="{{ url_for('static', filename='illustrations/empty.svg') }}" width="360" height="220" alt=""><h2 class="panel-title">Ringkasan hari ini belum tersedia</h2><p class="muted-copy">Kelas historis tetap dapat dibuka pada jurnal dan daftar siswa. Ringkasan harian mengikuti roster aktif tahun ajaran berjalan.</p></section>
           <p class="teacher-quick-links"><a class="ghost-button" href="{{ url_for('teacher.attendance', class_id=model.selected_class.class_id) }}">Buka jurnal</a><a class="ghost-button" href="{{ url_for('teacher.students', class_id=model.selected_class.class_id) }}">Lihat siswa</a></p>
         {% endif %}
       {% endif %}

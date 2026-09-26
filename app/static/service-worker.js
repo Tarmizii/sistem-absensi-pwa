@@ -1,6 +1,6 @@
 /* Cache only public static shell files. Private navigation, APIs, images, and attendance POSTs stay online-only. */
 const CACHE_PREFIX = "presensi-shell-";
-const CACHE_NAME = `${CACHE_PREFIX}v8`;
+const CACHE_NAME = `${CACHE_PREFIX}v9`;
 const OFFLINE_URL = "/static/offline.html";
 const PRECACHE_URLS = [
   "/static/css/app.css",
@@ -25,7 +25,20 @@ const CACHEABLE_ASSETS = new Set(PRECACHE_URLS);
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    await cache.addAll(PRECACHE_URLS);
+    // Tolerate individual asset failures: one missing file must not discard the
+    // whole offline shell. Failures are reported so they are actionable.
+    const results = await Promise.allSettled(
+      PRECACHE_URLS.map(async (url) => {
+        const response = await fetch(url, { cache: "reload" });
+        if (!response.ok) throw new Error(`${response.status} ${url}`);
+        await cache.put(url, response);
+      }),
+    );
+    results.forEach((result, index) => {
+      if (result.status === "rejected") {
+        console.warn("[sw] precache skipped", PRECACHE_URLS[index], result.reason);
+      }
+    });
     await self.skipWaiting();
   })());
 });
@@ -40,12 +53,25 @@ self.addEventListener("activate", (event) => {
   })());
 });
 
+// Defense in depth: these paths must never be served from or written to cache,
+// even if a future template edit accidentally routes them through the shell.
+const NEVER_CACHE_PATTERNS = [
+  /^\/(attendance|face|admin|student|teacher|profile|auth)\b/,
+  /\/evidence(\/|$)/,
+  /\/logout\b/,
+];
+
+function isPrivatePath(pathname) {
+  return NEVER_CACHE_PATTERNS.some((pattern) => pattern.test(pathname));
+}
+
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  if (isPrivatePath(url.pathname)) return;
 
   if (request.mode === "navigate") {
     event.respondWith((async () => {

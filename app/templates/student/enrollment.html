@@ -21,7 +21,7 @@
   {% elif progress %}
     <section class="bento-grid" aria-label="Progres pendaftaran wajah">
       <article class="panel panel-span-12 panel-coral">
-        <img id="enrollment-illustration" class="student-illustration enrollment-illustration" src="{{ url_for('static', filename='illustrations/enrollment-v2.webp') }}" width="1647" height="955" alt="">
+        <img id="enrollment-illustration" class="student-illustration enrollment-illustration" src="{{ url_for('static', filename='illustrations/enrollment-v2.webp') }}" width="800" height="464" alt="">
         <p class="eyebrow">Progres pendaftaran wajah</p><h2 class="panel-value"><span id="enrollment-saved-count">{{ progress.saved_count }}</span><span aria-hidden="true">/</span>{{ progress.total_poses }}</h2>
         <p id="enrollment-progress-message" class="muted-copy">pose valid tersimpan. Pendaftaran belum selesai sampai server memperbarui model wajah.</p>
       </article>

@@ -29,7 +29,7 @@
         <nav class="teacher-pagination" aria-label="Halaman audit log"><p class="muted-copy">Halaman {{ model.page }} dari {{ model.pages }} · {{ model.total }} hasil</p><div>{% if model.page > 1 %}<a class="ghost-button" href="{{ url_for('admin.audit_logs', **{'actor': model.actor or None, 'from': model.date_from or None, 'to': model.date_to or None, 'action': model.action or None, 'page': model.page - 1}) }}">Sebelumnya</a>{% else %}<span class="ghost-button" aria-disabled="true">Sebelumnya</span>{% endif %}{% if model.page < model.pages %}<a class="ghost-button" href="{{ url_for('admin.audit_logs', **{'actor': model.actor or None, 'from': model.date_from or None, 'to': model.date_to or None, 'action': model.action or None, 'page': model.page + 1}) }}">Berikutnya</a>{% else %}<span class="ghost-button" aria-disabled="true">Berikutnya</span>{% endif %}</div></nav>
       </section>
     {% else %}
-      <section class="panel empty-state"><h2 class="panel-title">Tidak ada aktivitas yang cocok</h2><p class="muted-copy">Periksa nama pelaku, rentang tanggal, atau aksi.</p></section>
+      <section class="panel empty-state"><img class="empty-state-illustration" src="{{ url_for('static', filename='illustrations/empty.svg') }}" width="360" height="220" alt=""><h2 class="panel-title">Tidak ada aktivitas yang cocok</h2><p class="muted-copy">Periksa nama pelaku, rentang tanggal, atau aksi.</p></section>
     {% endif %}
   </main>
 </div>

@@ -90,7 +90,7 @@
           <td class="table-actions"><a class="ghost-button" href="{{ url_for('admin.schedule_exception_edit', exception_id=item.exception_id) }}">Edit</a>
             <form method="post" action="{{ url_for('admin.schedule_exception_toggle', exception_id=item.exception_id) }}" novalidate><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="ghost-button" type="submit">{{ 'Nonaktifkan' if item.is_active else 'Aktifkan' }}</button></form></td>
         </tr>{% endfor %}
-      </tbody></table></div>{% else %}<div class="empty-state"><p class="panel-title">Belum ada exception.</p><p class="muted-copy">Tambahkan hari libur, kegiatan, ujian, atau pulang awal.</p></div>{% endif %}
+      </tbody></table></div>{% else %}<div class="empty-state"><img class="empty-state-illustration" src="{{ url_for('static', filename='illustrations/empty.svg') }}" width="360" height="220" alt=""><p class="panel-title">Belum ada exception.</p><p class="muted-copy">Tambahkan hari libur, kegiatan, ujian, atau pulang awal.</p></div>{% endif %}
     </section>
   </main>
 </div>

@@ -94,7 +94,7 @@
               <p class="muted-copy">Pantau kehadiran, tinjau catatan siswa, dan unduh laporan harian sekolah.</p>
               <a class="primary-button" href="{{ url_for('admin.attendance') }}">Buka monitoring presensi {{ icon('arrow-right') }}</a>
             </div>
-            <img class="welcome-art" src="{{ url_for('static', filename='illustrations/admin-welcome-v2.webp') }}" width="1402" height="1122" alt="">
+            <img class="welcome-art" src="{{ url_for('static', filename='illustrations/admin-welcome-v2.webp') }}" width="800" height="640" alt="">
           </section>
           <section class="panel admin-insight-card" aria-labelledby="admin-insight-title"><span class="feature-icon">{{ icon('chart') }}</span><p class="eyebrow">Kenali pola kehadiran</p><h2 id="admin-insight-title" class="panel-title">Dari catatan<br>menjadi wawasan.</h2><p class="muted-copy">Jalankan analisis untuk periode yang telah selesai atau buka hasil sebelumnya.</p><a class="ghost-button" href="{{ url_for('admin.analytics') }}">Buka analitik {{ icon('arrow-right') }}</a></section>
         </div>

@@ -10,8 +10,8 @@
 
 ## Kondisi repositori dan perintah
 
-- Aplikasi Flask sudah ada dan berjalan: fondasi T00–T14 selesai (application factory, auth + CSRF, master data Admin, jadwal/exception, geofence, audit, protected storage, gate enrollment Siswa). Working tree tercatat bersih pada branch `main`.
-- Blueprint yang sudah ada: `main`, `role`, `auth`, `admin`, `student`. Blueprint target PRD §15 `teacher`, `attendance`, `face`, dan `kmeans` belum ada; modul attendance, K-Means, ekspor, monitoring, dan PWA shell (manifest/service worker) juga belum ada. Struktur di bawah tetap target PRD, bukan klaim bahwa seluruh file/fitur sudah tersedia.
+- Aplikasi Flask sudah ada dan berjalan: fondasi T00–T30 selesai (application factory, auth + CSRF, master data Admin, jadwal/exception, geofence, audit, protected storage, gate enrollment Siswa, face enrollment manual capture, presensi check-in/out + evidence, monitoring guru, admin monitoring/export, K-Means analitik on-demand, PWA shell). Working tree tercatat bersih pada branch `main`.
+- Blueprint terpasang: `main`, `role`, `auth`, `admin`, `student`, `teacher`, `attendance`, `face`. (K-Means dilipat ke dalam blueprint `admin` di `/admin/analytics*`; bukan blueprint terpisah.) Struktur di bawah tetap target PRD §15.
 - Perintah install, run, test, dan smoke yang terverifikasi tercatat di `README.md` (misalnya `python -m unittest discover -s tests -v`, `scripts.create_admin`, `scripts.smoke_t07`–`smoke_t14`, `npm run build:css`). Saat tooling/perintah baru berhasil, dokumentasikan di `README.md`.
 - Database MySQL memakai `database/schema.sql` (instalasi baru) plus `database/migrations/001`–`009` (upgrade); `seed.sql` sengaja kosong — Admin dibuat melalui `scripts.create_admin`. Loader `.env` belum ada; konfigurasi lewat environment variable.
 - Lingkungan pengembangan saat inisialisasi menggunakan Windows/PowerShell. Target production tetap Linux VPS + domain + HTTPS.
@@ -86,8 +86,9 @@
 - Siswa: mobile PWA; bottom nav Beranda, Riwayat, Profil. Presensi adalah CTA dashboard.
 - Guru mobile: bottom nav Dashboard, Presensi, Siswa; profil melalui topbar/avatar. Guru desktop: sidebar Dashboard, Presensi Kelas, Data Siswa, Profil.
 - Admin: desktop, sidebar 256px dengan delapan tujuan pada PRD §16.3; viewport kecil boleh menampilkan pesan perangkat tidak didukung.
-- Breakpoint PRD: mobile <640px, tablet 640–1023px, desktop ≥1024px. Jangan mengimpor batas lebar atau navigasi dari proyek lain.
+- Breaks PRD: mobile <640px, tablet 640–1023px, desktop ≥1024px. Jangan mengimpor batas lebar atau navigasi dari proyek lain.
 - Gunakan warna status pada Lampiran B; sertakan label teks. Sediakan loading, empty, error, retry, dan disabled state yang jelas, termasuk permission kamera/lokasi.
+- Setiap pasangan foreground/background teks wajib memenuhi WCAG 2.1 AA: ≥4.5:1 untuk teks normal, ≥3:1 untuk teks besar dan objek non-teks (WCAG 1.4.11). Penanda non-teks (dot kalender, border kontrol, ikon status) wajib punya edge/border yang terlihat, bukan hanya isian tint. Label uppercase minimal 13px. Jangan bergantung pada warna saja untuk menyampaikan status — selalu sertakan teks atau `aria-label`. Regresi kontras dikunci di `tests/test_ui.py`; ubah token warna di `tailwind.input.css` dengan memeriksa tes tersebut.
 - PWA hanya menyimpan shell/aset yang aman. Presensi wajib online; jangan antrekan presensi offline atau cache respons sensitif/foto biometrik melalui Service Worker.
 
 ## Keamanan dan operasi

@@ -22,6 +22,20 @@
   let activeAction = cta.dataset.ctaAction;
   let activeFrameUrl = "";
 
+  // Attendance is online-only by policy: no offline queue exists anywhere, and
+  // this guard keeps the device from opening the camera with no way to submit.
+  function applyConnectivity() {
+    if (navigator.onLine) {
+      cta.dataset.offline = "false";
+      if (cta.dataset.locked !== "true") setCta(false);
+      return;
+    }
+    cta.dataset.offline = "true";
+    cta.disabled = true;
+    cta.querySelector("[data-cta-text]").textContent = "Presensi perlu koneksi internet";
+    announce("Presensi memerlukan koneksi internet. Sambungkan kembali lalu muat ulang.", "error");
+  }
+
   function announce(message, tone = "info") {
     status.textContent = message;
     status.dataset.tone = tone;
@@ -29,7 +43,8 @@
   }
 
   function setCta(running, label) {
-    cta.disabled = running || cta.dataset.locked === "true" || cta.dataset.serverEnabled !== "true";
+    cta.disabled = running || cta.dataset.locked === "true" || cta.dataset.serverEnabled !== "true"
+      || cta.dataset.offline === "true";
     if (label) cta.querySelector("[data-cta-text]").textContent = label;
   }
 
@@ -79,6 +94,10 @@
 
   async function readLocation() {
     return new Promise((resolve, reject) => {
+      if (!navigator.onLine) {
+        reject(new Error("Perangkat sedang offline. Presensi memerlukan koneksi internet."));
+        return;
+      }
       if (!navigator.geolocation) {
         reject(new Error("Perangkat tidak mendukung pelacakan lokasi."));
         return;
@@ -225,4 +244,7 @@
   window.addEventListener("pagehide", () => {
     if (stream) stream.getTracks().forEach((track) => track.stop());
   });
+  applyConnectivity();
+  window.addEventListener("online", applyConnectivity);
+  window.addEventListener("offline", applyConnectivity);
 })();

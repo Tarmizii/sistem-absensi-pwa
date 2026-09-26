@@ -170,6 +170,30 @@ class RoleShellTests(unittest.TestCase):
             with self.subTest(status=class_name):
                 self.assertGreaterEqual(_contrast_ratio(foreground, background), 4.5)
 
+    def test_non_text_status_markers_have_visible_edge_and_labels_stay_readable(self) -> None:
+        css = Path("app/static/css/tailwind.input.css").read_text(encoding="utf-8").lower()
+        theme = css.split("@font-face", maxsplit=1)[0]
+        tokens = dict(re.findall(r"--color-([\w-]+):\s*(#[0-9a-f]{6})", theme))
+        # The calendar legend dot is a non-text graphical object (WCAG 1.4.11) and
+        # must carry a visible border, not only a pale tint fill.
+        dot_rule = re.search(r"\.attendance-dot\s*\{([^}}]+)\}", css)
+        self.assertIsNotNone(dot_rule)
+        self.assertRegex(dot_rule.group(1), r"border:\s*1px solid rgba\(\s*48\s*,\s*48\s*,\s*68\s*,\s*\.(\d+)\)")
+        alpha = float(re.search(r"\.(\d+)\)", dot_rule.group(1)).group(1))
+        self.assertGreaterEqual(alpha, 0.6)
+        # Danger and warning text must clear 4.5:1 on their badge tints.
+        for foreground, background in (
+            (tokens["danger"], "#fde5e3"),
+            (tokens["warning"], "#fff5df"),
+        ):
+            with self.subTest(foreground=foreground):
+                self.assertGreaterEqual(_contrast_ratio(foreground, background), 4.5)
+        # Uppercase micro-labels must not fall below 13px for legibility.
+        eyebrow = re.search(r"\.eyebrow\s*\{([^}}]+)\}", css).group(1)
+        size = re.search(r"font-size:\s*([\d.]+)rem", eyebrow)
+        self.assertIsNotNone(size)
+        self.assertGreaterEqual(float(size.group(1)) * 16, 13)
+
     def test_role_illustrations_are_local_and_success_waits_for_server_confirmation(self) -> None:
         teacher = Path("app/templates/teacher/dashboard.html").read_text(encoding="utf-8")
         enrollment = Path("app/templates/student/enrollment.html").read_text(encoding="utf-8")
